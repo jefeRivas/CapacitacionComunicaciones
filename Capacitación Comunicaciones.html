@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitación - Comunicaciones</title>
+    
+    <!-- Carga estándar de Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Nunito', sans-serif; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #fff7ed; }
+        ::-webkit-scrollbar-thumb { background: #fb923c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+        
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Table responsive wrapper */
+        .table-wrapper { overflow-x: auto; border-radius: 0.5rem; border: 1px solid #fed7aa; }
+        table { width: 100%; text-align: left; border-collapse: collapse; }
+        th { background-color: #ffedd5; padding: 0.75rem 1rem; color: #c2410c; font-weight: 700; }
+        td { padding: 0.75rem 1rem; border-bottom: 1px solid #ffedd5; color: #4a5568; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* Fallback warning if CSS fails to load */
+        .tailwind-warning { background-color: #ef4444; color: white; padding: 1rem; text-align: center; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-orange-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Si Tailwind carga correctamente, esta clase "hidden" ocultará el mensaje -->
+    <div class="tailwind-warning hidden">
+        <i class="fa-solid fa-triangle-exclamation mr-2"></i> Advertencia: Los estilos principales no han cargado. Revisa tu conexión a internet o si algún bloqueador de anuncios está interfiriendo.
+    </div>
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-orange-500 text-white rounded-full flex items-center justify-center text-2xl shadow-lg shadow-orange-200">
+                    <i class="fa-solid fa-church"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-orange-800 leading-tight">Comunicaciones</h1>
+                    <p class="text-sm text-orange-600 font-semibold">Plataforma de Capacitación</p>
+                </div>
+            </div>
+            <div class="text-sm text-slate-500 italic text-center sm:text-right">
+                "Haciéndolo todo con excelencia"
+            </div>
+        </div>
+
+        <nav class="max-w-6xl mx-auto px-2 sm:px-4 flex overflow-x-auto hide-scrollbar border-t border-orange-100">
+            <button onclick="openTab('inicio')" class="tab-btn active px-4 py-3 text-sm sm:text-base font-bold text-orange-600 border-b-4 border-orange-500 whitespace-nowrap transition-colors hover:bg-orange-50" data-target="inicio">
+                <i class="fa-solid fa-house mr-1"></i> Inicio
+            </button>
+            <button onclick="openTab('camaras')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="camaras">
+                <i class="fa-solid fa-video mr-1"></i> Cámaras
+            </button>
+            <button onclick="openTab('textos')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="textos">
+                <i class="fa-solid fa-project-diagram mr-1"></i> Textos
+            </button>
+            <button onclick="openTab('transmision')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="transmision">
+                <i class="fa-solid fa-satellite-dish mr-1"></i> Transmisión
+            </button>
+            <button onclick="openTab('sonido')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="sonido">
+                <i class="fa-solid fa-sliders mr-1"></i> Sonido
+            </button>
+            <button onclick="openTab('esquema')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="esquema">
+                <i class="fa-solid fa-network-wired mr-1"></i> Esquema
+            </button>
+            <button onclick="openTab('evaluacion')" class="tab-btn ml-auto px-4 py-3 text-sm sm:text-base font-bold text-emerald-600 border-b-4 border-transparent hover:text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap" data-target="evaluacion">
+                <i class="fa-solid fa-graduation-cap mr-1"></i> Evaluación
+            </button>
+        </nav>
+    </header>
+
+    <main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
+        
+        <div id="inicio" class="tab-content active">
+            <div class="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 sm:p-10 text-center">
+                <h2 class="text-3xl font-extrabold text-orange-800 mb-4">¡Hola! Bienvenido al equipo 🤝</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+                    Esta es tu plataforma de capacitación. Aquí encontrarás guías paso a paso para operar los equipos durante los servicios. Revisa cada módulo y cuando te sientas listo, ve a la pestaña de <strong>Evaluación</strong>.
+                </p>
+                
+                <div class="aspect-w-16 aspect-h-9 w-full max-w-3xl mx-auto bg-slate-100 rounded-xl overflow-hidden shadow-inner border border-slate-200">
+                    <iframe width="100%" height="450" src="https://www.youtube.com/embed/dQw4w9WgXcQ?si=PlaceholderVideo" title="Video de Inducción" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen class="w-full h-[300px] sm:h-[450px]"></iframe>
+                </div>
+                <p class="text-sm text-slate-400 mt-3"><i class="fa-solid fa-info-circle"></i> Observa el video de inducción general antes de comenzar.</p>
+            </div>
+        </div>
+
+        <div id="camaras" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-video text-orange-500"></i> Manejo de Cámaras</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Prep -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-orange-500">
+                    <h3 class="text-xl font-bold text-orange-700 mb-3"><i class="fa-regular fa-clock mr-2"></i>1. Preparación Previa</h3>
+                    <p class="text-slate-600 mb-2">Llegar con al menos <strong>1 hora de anticipación</strong>.</p>
+                    <ul class="list-disc pl-5 text-slate-600 space-y-1">
+                        <li>Poner a cargar la <strong>Cámara 2</strong>.</li>
+                        <li>Poner a cargar la <strong>Power Bank</strong> (alimenta el transmisor).</li>
+                    </ul>
+                </div>
+
+                <!-- Comms -->
+                <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-orange-500">
+                    <h3 class="text-xl font-bold text-orange-700 mb-3"><i class="fa-solid fa-headset mr-2"></i>3. Comunicación</h3>
+                    <ul class="list-disc pl-5 text-slate-600 space-y-1">
+                        <li>Radio debidamente cargado.</li>
+                        <li>Uso obligatorio de audífonos.</li>
+                        <li>Comunicación continua con el operador en cabina.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold text-orange-800 mt-8 mb-4">2. Configuración por Cámara</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                    <h4 class="font-bold text-orange-900 mb-2">Cámara 1 (Centro)</h4>
+                    <ul class="text-sm text-slate-700 space-y-1 list-disc pl-4">
+                        <li>Apunta hacia el frente.</li>
+                        <li>Conectar 2 fuentes: cámara y convertidor.</li>
+                        <li><strong>Presionar obturador</strong> para quitar letras en pantalla.</li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                    <h4 class="font-bold text-orange-900 mb-2">Cámara 2 (Móvil)</h4>
+                    <ul class="text-sm text-slate-700 space-y-1 list-disc pl-4">
+                        <li>Revisar batería/enfoque.</li>
+                        <li>Verificar cable HDMI a transmisor.</li>
+                        <li>Transmisor conectado a Power Bank (Luz Verde).</li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                    <h4 class="font-bold text-orange-900 mb-2">Cámara Altar</h4>
+                    <ul class="text-sm text-slate-700 space-y-1 list-disc pl-4">
+                        <li>Encuadre fijo todo el culto.</li>
+                        <li>Conectar 2 cables cargadores.</li>
+                    </ul>
+                </div>
+                <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+                    <h4 class="font-bold text-orange-900 mb-2">Cámara Cabina</h4>
+                    <ul class="text-sm text-slate-700 space-y-1 list-disc pl-4">
+                        <li>Conectar 2 cables bajo escritorio.</li>
+                        <li>Ajustar encuadre.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold text-orange-800 mb-4">4. Durante la Transmisión</h3>
+            <div class="table-wrapper bg-white">
+                <table>
+                    <thead>
+                        <tr><th>Momento</th><th>Acción de Cámara</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Inicio / Dirección</td><td>Mantener enfocada a la persona que dirige.</td></tr>
+                        <tr><td>Alabanza</td><td>Enfocar grupo oportunamente al inicio.</td></tr>
+                        <tr><td>Oración / Ofrendas</td><td>Seguimiento a intervenciones y especial.</td></tr>
+                        <tr><td>Predicación</td><td><strong>Cámara 1:</strong> Fija al predicador.<br><strong>Cámara 2:</strong> Tomas de apoyo de público y altar.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="textos" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-project-diagram text-orange-500"></i> Proyección (Holyrics)</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100">
+                    <h3 class="text-xl font-bold text-orange-700 mb-2"><i class="fa-solid fa-music mr-2"></i>Formato de Canciones</h3>
+                    <p class="text-slate-600 mb-3">Si una canción no está, búscala respetando la <strong>Regla de Oro:</strong></p>
+                    <div class="bg-amber-100 border-l-4 border-amber-500 text-amber-800 p-4 rounded rouded-l-none font-semibold">
+                        1. Todo en MAYÚSCULAS.<br>
+                        2. Máximo 4 líneas de texto por diapositiva.
+                    </div>
+                </div>
+                
+                <div class="p-6 border-b border-slate-100 bg-slate-50">
+                    <h3 class="text-xl font-bold text-orange-700 mb-2"><i class="fa-solid fa-network-wired mr-2"></i>Conexión a Transmisión</h3>
+                    <ol class="list-decimal pl-5 text-slate-600 space-y-2">
+                        <li>En Holyrics: Menú <strong>Herramientas > Plugins</strong>.</li>
+                        <li>Verificar que esté Activo.</li>
+                        <li>Copiar la <strong>dirección IP</strong>.</li>
+                        <li>Entregar IP al operador de vMix.</li>
+                    </ol>
+                </div>
+
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-orange-700 mb-3"><i class="fa-solid fa-book-bible mr-2"></i>Durante el Culto</h3>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-slate-800">Predicación</h4>
+                            <p class="text-sm text-slate-600 mt-1">Usa Biblia Reina Valera 1960. Si falta cita, busca rápido en Google.</p>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-4 rounded-lg shadow-sm">
+                            <h4 class="font-bold text-slate-800">Videos/Audio</h4>
+                            <p class="text-sm text-slate-600 mt-1">El audio del PC debe ir a la consola usando el <strong>Grupo de Muteo 4</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="transmision" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-satellite-dish text-orange-500"></i> Transmisión (vMix / ATEM)</h2>
+            
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm">
+                    <h3 class="text-xl font-bold text-orange-700 mb-2">1. Encendido Rápido</h3>
+                    <ul class="list-disc pl-5 text-slate-600">
+                        <li>3 interruptores de piso (Largo blanco, Cuadrado negro, Cuadrado blanco).</li>
+                        <li>Computador Transmisión y Monitor.</li>
+                        <li>Computador All-in-One (Blackmagic) y su pantalla.</li>
+                        <li>Receptor inalámbrico HDMI.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-orange-100 shadow-sm">
+                    <h3 class="text-xl font-bold text-orange-700 mb-4">2. Configuración de YouTube</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">En YouTube Studio:</h4>
+                            <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                <li>Crear evento en vivo.</li>
+                                <li><strong>Título y Descripción:</strong> Del Bloc de notas.</li>
+                                <li>Copiar <strong>Clave de Transmisión</strong>.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-800 mb-2">En vMix:</h4>
+                            <ul class="text-sm text-slate-600 space-y-1 list-disc pl-4">
+                                <li>Tuerca junto a 'Stream' > Perfil <strong>Channel 2</strong>.</li>
+                                <li>Pegar clave de transmisión.</li>
+                                <li>Actualizar IP de textos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 text-white p-6 rounded-xl shadow-md">
+                    <h3 class="text-xl font-bold mb-2">Controles de Teclado (vMix)</h3>
+                    <div class="flex flex-wrap gap-4 mt-4">
+                        <div class="bg-slate-700 px-4 py-2 rounded font-mono border border-slate-600">Tecla I <i class="fa-solid fa-arrow-right mx-2 text-orange-400"></i> Video Intro</div>
+                        <div class="bg-slate-700 px-4 py-2 rounded font-mono border border-slate-600">Tecla F <i class="fa-solid fa-arrow-right mx-2 text-orange-400"></i> Video Cierre</div>
+                    </div>
+                    <p class="mt-4 text-sm text-slate-300"><i class="fa-solid fa-clock"></i> Iniciar transmisión a las X:55 (5 min antes).</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="sonido" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-sliders text-orange-500"></i> Sonido (X32)</h2>
+            
+            <div class="grid lg:grid-cols-3 gap-6 mb-6">
+                <div class="lg:col-span-1 bg-white rounded-xl shadow-sm p-6 border-t-4 border-red-500">
+                    <h3 class="font-bold text-lg text-slate-800 mb-3"><i class="fa-solid fa-power-off text-red-500 mr-2"></i>Encendido/Apagado</h3>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 mb-2 text-sm">
+                        <strong class="text-emerald-600">Encender:</strong> 1. Consola ➡️ 2. Plantas de potencia.
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 text-sm">
+                        <strong class="text-red-600">Apagar:</strong> 1. Plantas de potencia ➡️ 2. Consola.
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-0 overflow-hidden border border-orange-100">
+                    <div class="bg-orange-50 px-6 py-4 border-b border-orange-100">
+                        <h3 class="font-bold text-lg text-orange-800"><i class="fa-solid fa-layer-group mr-2"></i>Grupos de Muteo</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
+                                <div class="text-2xl font-black text-orange-600">Grupo 1</div>
+                                <div class="text-sm font-bold text-slate-700 mt-1">Alabanza / Banda</div>
+                            </div>
+                            <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
+                                <div class="text-2xl font-black text-orange-600">Grupo 2</div>
+                                <div class="text-sm font-bold text-slate-700 mt-1">Pastor (6 y 7)</div>
+                            </div>
+                            <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
+                                <div class="text-2xl font-black text-orange-600">Grupo 3</div>
+                                <div class="text-sm font-bold text-slate-700 mt-1">Dirección General</div>
+                            </div>
+                            <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
+                                <div class="text-2xl font-black text-orange-600">Grupo 4</div>
+                                <div class="text-sm font-bold text-slate-700 mt-1">PC Textos</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-orange-100">
+                <h3 class="font-bold text-orange-800 mb-3">Dinámica Durante el Culto</h3>
+                <ul class="space-y-3 text-slate-600">
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Alabanza:</strong> Bajar monitor izquierdo del altar. Activar Grupo 1, mutear Grupo 3. Cerrar canales sin uso.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Predicación:</strong> Subir monitor izquierdo. Activar Grupo 2.</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="esquema" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-6 flex items-center gap-3"><i class="fa-solid fa-network-wired text-orange-500"></i> Esquema Técnico</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Video -->
+                <div class="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden">
+                    <div class="bg-orange-600 text-white px-5 py-3 font-bold text-lg">Ruta de Video</div>
+                    <div class="p-5">
+                        <ul class="space-y-4">
+                            <li class="border-b border-slate-100 pb-2">
+                                <span class="font-bold text-slate-800">ATEM Blackmagic recibe:</span><br>
+                                <span class="text-sm text-slate-600">Cam 1 (Templo), Cam Altar, Cam Cabina, PC Textos.</span>
+                            </li>
+                            <li class="border-b border-slate-100 pb-2">
+                                <span class="font-bold text-slate-800">PC Transmisión (vMix) recibe:</span><br>
+                                <span class="text-sm text-slate-600">Salida de ATEM (SDI), Cam 2 (Receptor HDMI).</span>
+                            </li>
+                            <li>
+                                <span class="font-bold text-slate-800">Monitores Templo:</span><br>
+                                <span class="text-sm text-slate-600">PC Transmisión ➡️ Splitter HDMI ➡️ 4 TVs.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Audio -->
+                <div class="bg-white rounded-xl shadow-sm border border-orange-100 overflow-hidden">
+                    <div class="bg-slate-800 text-white px-5 py-3 font-bold text-lg">Ruta de Audio (X32)</div>
+                    <div class="p-5">
+                        <ul class="space-y-4">
+                            <li class="border-b border-slate-100 pb-2">
+                                <span class="font-bold text-slate-800">Salidas Físicas:</span><br>
+                                <span class="text-sm text-slate-600">Planta 1 (Templo), Planta 2 (Monitores Altar), Bafle 2do piso, Audífonos.</span>
+                            </li>
+                            <li>
+                                <span class="font-bold text-orange-600">Salida Streaming:</span><br>
+                                <span class="text-sm text-slate-600">Cable USB directo a PC Transmisión.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 bg-blue-50 text-blue-800 p-4 rounded-xl text-sm flex gap-3 border border-blue-200">
+                <i class="fa-solid fa-lightbulb text-xl text-blue-500 flex-shrink-0"></i>
+                <p><strong>Mejora sugerida:</strong> Para evitar latencia en Cámara 2, se recomienda conexión NDI, o unificar todas las cámaras en la Blackmagic.</p>
+            </div>
+        </div>
+
+        <div id="evaluacion" class="tab-content">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-3xl font-extrabold text-orange-800 mb-2 text-center">Evaluación de Conocimientos</h2>
+                <p class="text-center text-slate-500 mb-8">Comprueba qué tanto has aprendido.</p>
+                
+                <div id="quiz-container" class="bg-white rounded-2xl shadow-lg border border-orange-100 p-6 sm:p-10 relative overflow-hidden">
+                    
+                    <div id="quiz-intro" class="text-center">
+                        <div class="w-24 h-24 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                            <i class="fa-solid fa-clipboard-question"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">¿Listo para comenzar?</h3>
+                        <p class="text-slate-600 mb-8">El cuestionario consta de 8 preguntas. Al final te daremos recomendaciones personalizadas.</p>
+                        <button onclick="startQuiz()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1">
+                            Iniciar Evaluación
+                        </button>
+                    </div>
+
+                    <div id="quiz-question-area" class="hidden">
+                        <div class="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
+                            <span id="quiz-progress">Pregunta 1 de 8</span>
+                            <span id="quiz-topic-badge" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full uppercase text-xs">Módulo</span>
+                        </div>
+                        
+                        <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-slate-800 mb-6 leading-tight">¿Pregunta?</h3>
+                        
+                        <div id="options-container" class="space-y-3">
+                            <!-- Inyectado por JS -->
+                        </div>
+                        
+                        <div class="mt-8 flex justify-end">
+                            <button id="next-btn" onclick="nextQuestion()" class="hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                                Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="quiz-results" class="hidden text-center">
+                        <div id="result-icon" class="w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6"></div>
+                        <h3 id="result-title" class="text-3xl font-bold mb-2">Resultados</h3>
+                        <p class="text-lg text-slate-600 mb-6">Tu puntuación: <span id="score-text" class="font-black text-2xl"></span></p>
+                        
+                        <div id="recommendations-box" class="bg-orange-50 rounded-xl p-6 text-left border border-orange-200 hidden">
+                            <h4 class="font-bold text-orange-800 mb-3 flex items-center"><i class="fa-solid fa-book-open mr-2"></i> Recomendaciones de Estudio:</h4>
+                            <p class="text-sm text-slate-600 mb-3">Sugerimos repasar estos módulos:</p>
+                            <ul id="recommendations-list" class="list-disc pl-5 space-y-2 text-orange-700 font-semibold"></ul>
+                        </div>
+                        
+                        <button onclick="resetQuiz()" class="mt-8 border-2 border-slate-300 text-slate-600 hover:bg-slate-50 font-bold py-2 px-6 rounded-lg transition-colors">
+                            Volver a intentar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-sm">
+        <p>Equipo de Comunicaciones &copy; 2026. Diseñado para la excelencia.</p>
+    </footer>
+
+    <script>
+        // Tab Navigation Logic
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-orange-600', 'border-orange-500');
+                btn.classList.add('text-slate-500', 'border-transparent');
+                
+                if(btn.dataset.target === 'evaluacion') {
+                   btn.classList.remove('text-emerald-700', 'border-emerald-500');
+                   btn.classList.add('text-emerald-600');
+                }
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            
+            const activeBtn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
+            if(tabId === 'evaluacion') {
+                activeBtn.classList.remove('text-emerald-600', 'border-transparent');
+                activeBtn.classList.add('active', 'text-emerald-700', 'border-emerald-500');
+            } else {
+                activeBtn.classList.remove('text-slate-500', 'border-transparent');
+                activeBtn.classList.add('active', 'text-orange-600', 'border-orange-500');
+            }
+        }
+
+        const quizData = [
+            { topic: "camaras", moduleName: "Cámaras", question: "¿Con cuánto tiempo de anticipación debes llegar para preparar los equipos?", options: ["15 minutos", "30 minutos", "1 hora", "2 horas"], answer: 2 },
+            { topic: "camaras", moduleName: "Cámaras", question: "¿Qué se debe hacer al encender la Cámara 1 para quitar el mensaje de pantalla?", options: ["Apagarla y prenderla", "Presionar el botón del obturador", "Desconectar el HDMI", "Ajustar el Zoom"], answer: 1 },
+            { topic: "textos", moduleName: "Textos y Proyección", question: "¿Cómo debe ingresarse estrictamente la letra de las canciones en Holyrics?", options: ["En minúsculas", "Formato Título", "En MAYÚSCULAS", "Sin acentos"], answer: 2 },
+            { topic: "camaras", moduleName: "Cámaras", question: "Durante la predicación, ¿Qué cámara se mueve por el templo haciendo tomas de apoyo?", options: ["Cámara 1", "Cámara de Cabina", "Cámara de Altar", "Cámara 2 (Móvil)"], answer: 3 },
+            { topic: "transmision", moduleName: "Transmisión", question: "En vMix, ¿Qué tecla presionas para activar el video/cortinilla de inicio?", options: ["Tecla F", "Tecla I", "Barra Espaciadora", "Enter"], answer: 1 },
+            { topic: "sonido", moduleName: "Sonido", question: "Al apagar el sistema, ¿Cuál es el orden correcto?", options: ["Apagar todo al mismo tiempo", "Apagar consola y luego plantas", "Apagar plantas de potencia y luego consola", "Desconectar la energía principal"], answer: 2 },
+            { topic: "sonido", moduleName: "Sonido", question: "¿Qué grupo de muteo en la X32 se debe activar para la Alabanza/Banda?", options: ["Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"], answer: 0 },
+            { topic: "esquema", moduleName: "Esquema Técnico", question: "¿Qué software central se utiliza en el Computador de Transmisión?", options: ["OBS Studio", "vMix", "Wirecast", "Blackmagic ATEM"], answer: 1 }
+        ];
+
+        let currentQuestion = 0; let score = 0; let wrongTopics = new Set();
+        const domIntro = document.getElementById('quiz-intro'), domArea = document.getElementById('quiz-question-area'), domResults = document.getElementById('quiz-results');
+        const domQuestion = document.getElementById('question-text'), domOptions = document.getElementById('options-container'), domProgress = document.getElementById('quiz-progress'), domTopic = document.getElementById('quiz-topic-badge'), nextBtn = document.getElementById('next-btn');
+
+        function startQuiz() {
+            currentQuestion = 0; score = 0; wrongTopics.clear();
+            domIntro.classList.add('hidden'); domResults.classList.add('hidden'); domArea.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            nextBtn.classList.add('hidden');
+            const q = quizData[currentQuestion];
+            domProgress.innerText = `Pregunta ${currentQuestion + 1} de ${quizData.length}`;
+            domTopic.innerText = q.moduleName;
+            domQuestion.innerText = q.question;
+            domOptions.innerHTML = '';
+            
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 hover:bg-orange-50 transition-all font-semibold text-slate-700 option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(index, btn);
+                domOptions.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex, btnElement) {
+            if(!nextBtn.classList.contains('hidden')) return;
+            const q = quizData[currentQuestion];
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            allBtns.forEach(b => {
+                b.classList.remove('hover:border-orange-400', 'hover:bg-orange-50');
+                b.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+
+            if(selectedIndex === q.answer) {
+                btnElement.classList.remove('border-slate-200', 'opacity-50');
+                btnElement.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800', 'opacity-100');
+                btnElement.innerHTML += ' <i class="fa-solid fa-circle-check float-right text-xl text-emerald-500"></i>';
+                score++;
+            } else {
+                btnElement.classList.remove('border-slate-200', 'opacity-50');
+                btnElement.classList.add('border-red-500', 'bg-red-50', 'text-red-800', 'opacity-100');
+                btnElement.innerHTML += ' <i class="fa-solid fa-circle-xmark float-right text-xl text-red-500"></i>';
+                allBtns[q.answer].classList.remove('border-slate-200', 'opacity-50');
+                allBtns[q.answer].classList.add('border-emerald-500', 'bg-emerald-50', 'opacity-100');
+                wrongTopics.add({id: q.topic, name: q.moduleName});
+            }
+            nextBtn.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if(currentQuestion < quizData.length) { loadQuestion(); } else { showResults(); }
+        }
+
+        function showResults() {
+            domArea.classList.add('hidden');
+            domResults.classList.remove('hidden');
+            const percentage = (score / quizData.length) * 100;
+            document.getElementById('score-text').innerText = `${score} / ${quizData.length} (${percentage}%)`;
+            
+            const iconContainer = document.getElementById('result-icon');
+            const title = document.getElementById('result-title');
+            
+            if(percentage === 100) {
+                iconContainer.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-emerald-100 text-emerald-500';
+                iconContainer.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                title.innerText = '¡Excelente Trabajo!'; title.className = 'text-3xl font-bold mb-2 text-emerald-600';
+            } else if (percentage >= 70) {
+                iconContainer.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-orange-100 text-orange-500';
+                iconContainer.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+                title.innerText = '¡Muy Bien!'; title.className = 'text-3xl font-bold mb-2 text-orange-600';
+            } else {
+                iconContainer.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-red-100 text-red-500';
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title.innerText = 'Hay oportunidad de mejora'; title.className = 'text-3xl font-bold mb-2 text-red-600';
+            }
+
+            const recBox = document.getElementById('recommendations-box');
+            const recList = document.getElementById('recommendations-list');
+            recList.innerHTML = '';
+
+            if(wrongTopics.size > 0) {
+                recBox.classList.remove('hidden');
+                const uniqueTopics = Array.from(new Set([...wrongTopics].map(t => t.id))).map(id => [...wrongTopics].find(t => t.id === id));
+                uniqueTopics.forEach(topic => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<button onclick="openTab('${topic.id}')" class="underline hover:text-orange-900 transition-colors">Repasar módulo de ${topic.name}</button>`;
+                    recList.appendChild(li);
+                });
+            } else {
+                recBox.classList.add('hidden');
+            }
+        }
+
+        function resetQuiz() {
+            domResults.classList.add('hidden');
+            domIntro.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
