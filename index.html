@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capacitación - Comunicaciones</title>
     
+    <!-- Carga estándar de Tailwind -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -48,9 +49,8 @@
         .tailwind-warning { background-color: #ef4444; color: white; padding: 1rem; text-align: center; font-weight: bold; }
     </style>
 </head>
-<body class="bg-orange-50 text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="bg-orange-50 text-slate-800 antialiased min-h-screen flex flex-col relative">
 
-    <!-- Si Tailwind carga correctamente, esta clase "hidden" ocultará el mensaje -->
     <div class="tailwind-warning hidden">
         <i class="fa-solid fa-triangle-exclamation mr-2"></i> Advertencia: Los estilos principales no han cargado. Revisa tu conexión a internet o si algún bloqueador de anuncios está interfiriendo.
     </div>
@@ -74,9 +74,9 @@
                     <button onclick="openWeekly()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-2 rounded-lg transition-colors shadow-sm">
                         <i class="fa-regular fa-calendar-days mr-1"></i> Programación
                     </button>
-                    <!-- Botón de configuración (Admin) -->
+                    <!-- Botón Configurar Administrativo -->
                     <button onclick="openPasswordPrompt()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-colors shadow-sm" title="Configurar Programación">
-                        <i class="fa-solid fa-gear"></i> Configurar
+                        <i class="fa-solid fa-gear mr-1"></i> Configurar
                     </button>
                 </div>
             </div>
@@ -120,7 +120,7 @@
             <div class="bg-white rounded-2xl shadow-sm border border-orange-100 p-6 sm:p-10 text-center">
                 <h2 class="text-3xl font-extrabold text-orange-800 mb-4">¡Hola! Bienvenido al equipo 🤝</h2>
                 <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
-                    Esta es tu plataforma de capacitación. Aquí encontrarás guías paso a paso para operar los equipos durante los servicios. Desliza hacia los lados en tu celular para navegar o usa el menú superior. Revisa cada módulo y cuando te sientas listo, ve a la pestaña de <strong>Evaluación</strong>.
+                    Esta es tu plataforma de capacitación. Aquí encontrarás guías paso a paso para operar los equipos durante los servicios. Desliza hacia los lados en tu dispositivo para cambiar de sección. Revisa cada módulo y cuando te sientas listo, ve a la pestaña de <strong>Evaluación</strong>.
                 </p>
                 
                 <div class="aspect-video w-full max-w-3xl mx-auto bg-slate-100 rounded-xl overflow-hidden shadow-inner border border-slate-200">
@@ -144,7 +144,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white rounded-xl p-6 shadow-sm border-l-4 border-orange-500">
                     <h3 class="text-xl font-bold text-orange-700 mb-3"><i class="fa-regular fa-clock mr-2"></i>1. Preparación Previa</h3>
-                    <p class="text-slate-600 mb-2">Llegar con al menos <strong>1 hora de anticipación</strong> los domingos y media hora en semana</p>
+                    <p class="text-slate-600 mb-2">Llegar con al menos <strong>1 hora de anticipación</strong> los domingos y media hora en semana.</p>
                     <ul class="list-disc pl-5 text-slate-600 space-y-1">
                         <li>Poner a cargar la <strong>Cámara 2</strong>.</li>
                         <li>Poner a cargar la <strong>Power Bank</strong> (alimenta el transmisor).</li>
@@ -177,7 +177,7 @@
                         <li>Revisar estado de la batería.</li>
                         <li>Verificar que esté conectado el cable HDMI al transmisor.</li>
                         <li>Transmisor conectado a la Power Bank (Luz Verde activa).</li>
-                        <li>Evitar hacer tomas cerradas o individuales, que al menos haya 4 personas.</li>
+                        <li>Evitar hacer tomas cerradas o individuales, que al menos haya 4 personas en cada toma.</li>
                         <li>Hacer tomas dinámicas, paneos, zoom, detalles.</li>
                     </ul>
                 </div>
@@ -317,7 +317,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
                                 <div class="text-2xl font-black text-orange-600">Grupo 1</div>
-                                <div class="text-sm font-bold text-slate-700 mt-1">Alabanza e instrum.</div>
+                                <div class="text-sm font-bold text-slate-700 mt-1">Alabanza e instrumentos</div>
                             </div>
                             <div class="border border-orange-200 rounded p-3 text-center bg-white shadow-sm">
                                 <div class="text-2xl font-black text-orange-600">Grupo 2</div>
@@ -338,10 +338,10 @@
             <div class="bg-white p-6 rounded-xl shadow-sm border border-orange-100">
                 <h3 class="font-bold text-orange-800 mb-3">Dinámica Durante el Culto</h3>
                 <ul class="space-y-3 text-slate-600">
-                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Al Iniciar:</strong> Conectar y encender monitor de alabanza, conectar micrófono del pastor, probar in-ears.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Al Iniciar:</strong> Conectar y encender monitor de alabanza, conectar micrófono del pastor, probar sonido e in-ear de alabanza.</span></li>
                     <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Alabanza:</strong> Bajar monitor izquierdo del altar. Activar Grupo 1, mutear Grupo 3. Cerrar canales sin uso.</span></li>
                     <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Predicación:</strong> Subir monitor izquierdo. Activar Grupo 2. Mutear Grupo 1.</span></li>
-                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Todo el culto:</strong> Activar sonido ambiente para aplausos. Recorrer el templo para monitorear sonido.</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-check-circle text-orange-500 mt-1 mr-2"></i> <span><strong>Todo el culto:</strong> Activar sonido ambiente para aplausos o expresiones del público. Recorrer el templo para monitorear sonido.</span></li>
                 </ul>
             </div>
         </div>
@@ -356,7 +356,7 @@
                         <ul class="space-y-4">
                             <li class="border-b border-slate-100 pb-2">
                                 <span class="font-bold text-slate-800">ATEM Blackmagic recibe:</span><br>
-                                <span class="text-sm text-slate-600">Cam 1, Cam Altar, Cam Cabina, PC Textos.</span>
+                                <span class="text-sm text-slate-600">Cam 1 (Templo), Cam Altar, Cam Cabina, PC Textos.</span>
                             </li>
                             <li class="border-b border-slate-100 pb-2">
                                 <span class="font-bold text-slate-800">PC Transmisión (vMix) recibe:</span><br>
@@ -375,7 +375,7 @@
                         <ul class="space-y-4">
                             <li class="border-b border-slate-100 pb-2">
                                 <span class="font-bold text-slate-800">Salidas Físicas:</span><br>
-                                <span class="text-sm text-slate-600">Planta 1, Planta 2, Bafle 2do piso, Audífonos.</span>
+                                <span class="text-sm text-slate-600">Planta 1 (Templo), Planta 2 (Monitores Altar), Bafle 2do piso, Audífonos.</span>
                             </li>
                             <li>
                                 <span class="font-bold text-orange-600">Salida Streaming:</span><br>
@@ -394,11 +394,13 @@
         <!-- Tab: Checklist -->
         <div id="checklist" class="tab-content">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <h2 class="text-3xl font-extrabold text-orange-800 flex items-center gap-3"><i class="fa-solid fa-list-check text-orange-500"></i> Checklist</h2>
+                <h2 class="text-3xl font-extrabold text-orange-800 flex items-center gap-3"><i class="fa-solid fa-list-check text-orange-500"></i> Checklist del Servicio</h2>
                 <button onclick="resetChecklist()" class="text-sm font-bold border-2 border-slate-300 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors">
-                    <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar checklist
                 </button>
             </div>
+            <p class="text-slate-600 mb-6">Marca cada punto a medida que lo completas. Tu progreso se guarda en este navegador. <strong>Antes:</strong> domingos 1 hora antes, entre semana media hora antes.</p>
+
             <div class="bg-white rounded-xl border border-orange-100 shadow-sm p-4 mb-6">
                 <div class="flex justify-between text-sm font-bold text-slate-500 mb-2">
                     <span>Progreso total</span><span id="check-progress-text">0%</span>
@@ -407,9 +409,9 @@
                     <div id="check-progress-bar" class="bg-orange-500 h-3 rounded-full transition-all" style="width:0%"></div>
                 </div>
             </div>
+
             <div class="space-y-8 mb-8">
-                <!-- Solo mantendré una sección reducida del checklist original por legibilidad, 
-                     asumo el mismo formato para las demás. -->
+                <!-- ===== CÁMARAS ===== -->
                 <section data-section="cam" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
                     <div class="bg-orange-600 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
                         <span class="flex items-center gap-2"><i class="fa-solid fa-video"></i> Cámaras</span>
@@ -419,53 +421,176 @@
                     <div class="grid md:grid-cols-2 gap-6 p-5">
                         <div>
                             <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
-                            <label class="check-item"><input type="checkbox" data-check="c-a1"><span class="text-sm text-slate-700">Radio cargado y probar comunicación</span></label>
-                            <label class="check-item"><input type="checkbox" data-check="c-a2"><span class="text-sm text-slate-700">Poner a cargar Cámara 2 y Power Bank</span></label>
-                            <label class="check-item"><input type="checkbox" data-check="c-a3"><span class="text-sm text-slate-700">Cámara 1: centro apuntando al altar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a1"><span class="text-sm text-slate-700">Radio cargado y audífonos puestos; probar comunicación con el operador en cabina</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a2"><span class="text-sm text-slate-700">Poner a cargar la Cámara 2 y la Power Bank</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a3"><span class="text-sm text-slate-700">Cámara 1: llevarla al centro del templo apuntando al altar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a4"><span class="text-sm text-slate-700">Cámara 1: conectar las 2 fuentes de energía (cámara y convertidor), quitar el protector del lente y encenderla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a5"><span class="text-sm text-slate-700">Cámara 1: presionar el obturador para quitar las letras de la pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a6"><span class="text-sm text-slate-700">Cámara 2: revisar batería, cable HDMI al transmisor y transmisor en la Power Bank con luz verde</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a7"><span class="text-sm text-slate-700">Receptor inalámbrico HDMI encendido, con el cargador conectado bajo el escritorio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a8"><span class="text-sm text-slate-700">Cámara Altar: toma general fija y los 2 cables cargadores conectados</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a9"><span class="text-sm text-slate-700">Cámara Cabina: 2 cables bajo el escritorio conectados y encuadre ajustado</span></label>
                         </div>
                         <div>
                             <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
-                            <label class="check-item"><input type="checkbox" data-check="c-d1"><span class="text-sm text-slate-700">Apagar todas las cámaras</span></label>
-                            <label class="check-item"><input type="checkbox" data-check="c-d2"><span class="text-sm text-slate-700">Apagar transmisor y receptor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d1"><span class="text-sm text-slate-700">Apagar la Cámara 1, la Cámara del Altar, la Cámara de la Cabina y la Cámara 2</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d2"><span class="text-sm text-slate-700">Apagar el transmisor de la Cámara 2 y el receptor inalámbrico HDMI</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d3"><span class="text-sm text-slate-700">Poner el protector al lente de la Cámara 1</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d4"><span class="text-sm text-slate-700">poner los cobertores a las cámaras 1 y 2</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d5"><span class="text-sm text-slate-700">Desconectar los cables de las cámaras; Ubicar las cámaras en el lugar correspondiente</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d6"><span class="text-sm text-slate-700">Notificar cualquier novedad o mejora que se pueda aplicar para el servicio</span></label>
                         </div>
                     </div>
                 </section>
-                <!-- Secciones de Textos, Sonido y Transmisión siguen el mismo patrón... -->
+
+                <!-- ===== SONIDO ===== -->
+                <section data-section="son" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-slate-800 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Sonido</span>
+                        <span class="text-sm font-semibold" data-section-text="son">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-2"><div data-section-bar="son" class="bg-slate-700 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="s-a1"><span class="text-sm text-slate-700">Encender la consola X32 y luego las plantas de potencia</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a2"><span class="text-sm text-slate-700">Conectar y encender el monitor de alabanza en el piso del altar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a3"><span class="text-sm text-slate-700">Conectar el micrófono del pastor (Receptor ubicado al lado de los instrumentos)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a4"><span class="text-sm text-slate-700">Revisar los micrófonos del director</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a5"><span class="text-sm text-slate-700">Probar el sonido y el in-ear de cada miembro de la alabanza</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a6"><span class="text-sm text-slate-700">Revisar los grupos de muteo: 1 alabanza e instrumentos, 2 pastor, 3 dirección general, 4 sonido del PC</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a7"><span class="text-sm text-slate-700">Activar el sonido ambiente para aplausos y expresiones del público (cuando sea necesario)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a8"><span class="text-sm text-slate-700">Verificar que el cable USB al PC de transmisión esté conectado y llegue audio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a9"><span class="text-sm text-slate-700">Revisar que el sonido esté saliendo de manera correcta en internet</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="s-d1"><span class="text-sm text-slate-700">Bajar los faders y mutear los canales antes de apagar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d2"><span class="text-sm text-slate-700">Apagar primero las plantas de potencia y después la consola</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d3"><span class="text-sm text-slate-700">Apagar los micrófonos</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d4"><span class="text-sm text-slate-700">Apagar y desconectar el monitor de alabanza y el receptor del micrófono del pastor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d5"><span class="text-sm text-slate-700">Revisar que los pianos y batería esten apagados y desconectados</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d6"><span class="text-sm text-slate-700">Cerrar y guardar los auriculares de la consola</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d7"><span class="text-sm text-slate-700">Anotar fallas o mejoras de sonido para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== TEXTOS ===== -->
+                <section data-section="txt" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-amber-600 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-project-diagram"></i> Textos (Holyrics)</span>
+                        <span class="text-sm font-semibold" data-section-text="txt">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-amber-100 h-2"><div data-section-bar="txt" class="bg-amber-500 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="t-a1"><span class="text-sm text-slate-700">Holyrics abierto con la lista de canciones del culto cargada</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a2"><span class="text-sm text-slate-700">Canciones que falten: buscarlas y escribirlas en MAYÚSCULAS, máximo 4 líneas por diapositiva</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a3"><span class="text-sm text-slate-700">Plugin de textos activo (Herramientas > Plugins)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a4"><span class="text-sm text-slate-700">Mencionar la dirección IP al operador de vMix</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a5"><span class="text-sm text-slate-700">Biblia Reina Valera 1960 lista para la predicación</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a6"><span class="text-sm text-slate-700">Reproducir el audio del PC para ambiente antes de empezar el culto (Grupo de Muteo 4)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a7"><span class="text-sm text-slate-700">Tener celular o Google a la mano para buscar citas bíblicas</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="t-d1"><span class="text-sm text-slate-700">Cerrar Holyrics</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d2"><span class="text-sm text-slate-700">Apagar correctamente el PC de textos</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d3"><span class="text-sm text-slate-700">Anotar canciones nuevas o letras por corregir para el próximo servicio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d4"><span class="text-sm text-slate-700">Anotar fallas o mejoras de textos para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== TRANSMISIÓN ===== -->
+                <section data-section="trx" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-emerald-700 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-satellite-dish"></i> Transmisión (vMix / ATEM)</span>
+                        <span class="text-sm font-semibold" data-section-text="trx">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-emerald-100 h-2"><div data-section-bar="trx" class="bg-emerald-600 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="x-a1"><span class="text-sm text-slate-700">Encender los 3 interruptores de piso (largo blanco, cuadrado negro, cuadrado blanco)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a2"><span class="text-sm text-slate-700">Encender el PC de transmisión y su monitor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a3"><span class="text-sm text-slate-700">Encender la mac (Blackmagic) y su pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a4"><span class="text-sm text-slate-700">YouTube Studio: crear el evento en vivo con título y descripción del Bloc de notas</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a5"><span class="text-sm text-slate-700">YouTube Studio: cargar la miniatura del culto y copiar la clave de transmisión</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a6"><span class="text-sm text-slate-700">vMix: perfil Channel 2, pegar la clave de transmisión, guardar y cerrar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a7"><span class="text-sm text-slate-700">vMix: actualizar la IP de textos con la que entregó Holyrics</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a8"><span class="text-sm text-slate-700">Probar el video de intro (tecla I) y el de cierre (tecla F)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a9"><span class="text-sm text-slate-700">iniciar grabación (Si aplica)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a10"><span class="text-sm text-slate-700">Iniciar la transmisión a las X:55 (5 min antes del culto) y verificar imagen y audio en YouTube Studio</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="x-d1"><span class="text-sm text-slate-700">Lanzar el video de cierre (tecla F), finalizar grabación (Si aplica) y finalizar la transmisión en vMix cuando termine</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d2"><span class="text-sm text-slate-700">Confirmar en YouTube Studio que la transmisión terminó</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d3"><span class="text-sm text-slate-700">Cerrar el navegador</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d4"><span class="text-sm text-slate-700">Cerrar vMix</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d5"><span class="text-sm text-slate-700">Apagar correctamente el PC de transmisión y su monitor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d6"><span class="text-sm text-slate-700">Apagar la mac (Blackmagic) y su pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d7"><span class="text-sm text-slate-700">Apagar los 3 interruptores de piso</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d8"><span class="text-sm text-slate-700">Anotar fallas o mejoras de transmisión para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
 
         <!-- Tab: Problemas -->
         <div id="problemas" class="tab-content">
             <h2 class="text-3xl font-extrabold text-orange-800 mb-2 flex items-center gap-3"><i class="fa-solid fa-screwdriver-wrench text-orange-500"></i> Solución de Problemas</h2>
-            <p class="text-slate-600 mb-6">Regla general: avisa por radio, revisa lo más simple primero y cambia <strong>una cosa a la vez</strong>.</p>
+            <p class="text-slate-600 mb-6">Regla general: avisa por radio, revisa lo más simple primero (cables, encendido, mute) y cambia <strong>una cosa a la vez</strong>.</p>
             <div class="table-wrapper bg-white mb-8">
                 <table>
                     <thead>
-                        <tr><th>Problema</th><th>Qué revisar</th></tr>
+                        <tr><th>Problema</th><th>Posibles causas</th><th>Qué revisar</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><strong>No hay audio en YouTube</strong></td><td>Cable USB; audio activo (sin mute) en vMix; salida USB asignada en la X32.</td></tr>
-                        <tr><td><strong>Los textos no aparecen</strong></td><td>Plugin activo en Holyrics; actualizar IP en vMix; ambos PCs en la misma red.</td></tr>
-                        <tr><td><strong>No se escucha al pastor</strong></td><td>Micrófono encendido y con batería; Grupo 2 activo; canal 7 de X32.</td></tr>
-                        <tr><td><strong>Cámara 2 se congela</strong></td><td>Luz verde del transmisor; línea de vista con el receptor; cable HDMI firme.</td></tr>
+                        <tr><td><strong>No hay audio en YouTube</strong></td><td>Cable USB, audio silenciado en vMix, enrutamiento de la X32.</td><td>Cable USB conectado; entrada de audio y Master activos (sin mute) en vMix; medidor de audio moviéndose; salida USB asignada en la X32.</td></tr>
+                        <tr><td><strong>Los textos no aparecen en la transmisión</strong></td><td>IP cambió, plugin desactivado, equipos en distinta red.</td><td>Plugin activo en Holyrics (Herramientas > Plugins); copiar IP nuevamente y actualizarla en vMix; ambos PCs en la misma red.</td></tr>
+                        <tr><td><strong>Se oyen los videos del PC en la transmisión pero no en la sala (o al revés)</strong></td><td>Grupo de muteo del PC en la posición equivocada.</td><td>Grupo de Muteo 4 (sonido de PC Textos) activo; cable de audio del PC a la consola firme; canal del PC con nivel.</td></tr>
+                        <tr><td><strong>No se escucha al pastor</strong></td><td>Micrófono apagado o sin batería, Grupo 2 muteado, canal 7.</td><td>Micrófono conectado y encendido; pilas; canal 7 sin mute y Grupo 2 activo; fader y ganancia del canal.</td></tr>
+                        <tr><td><strong>La alabanza no escucha su monitor o in-ear</strong></td><td>Monitor sin conectar, volumen bajo, in-ear sin señal.</td><td>Monitor de alabanza conectado y encendido; envíos de monitor en la X32; batería y conexión del in-ear; repetir la prueba de sonido.</td></tr>
+                        <tr><td><strong>Cámara 2 se congela o se pixela</strong></td><td>Pérdida de señal inalámbrica, batería baja, interferencia.</td><td>Luz verde del transmisor y Power Bank; línea de vista con el receptor (cargador conectado bajo el escritorio); cable HDMI firme; batería de la cámara.</td></tr>
+                        <tr><td><strong>Audio y video desfasados</strong></td><td>Retardo de la Cámara 2 o del procesamiento.</td><td>Aplicar retraso de audio (<em>Audio Delay</em>) en vMix hasta sincronizar con los labios.</td></tr>
+                        <tr><td><strong>La transmisión se corta o se ve entrecortada</strong></td><td>Poco ancho de banda de subida, Wi-Fi, CPU saturada.</td><td>Cable de red conectado; otros dispositivos usando internet; uso de CPU en vMix; reiniciar el stream y revisar YouTube Studio.</td></tr>
+                        <tr><td><strong>Silbido / acople</strong></td><td>Micrófono cerca de un parlante o monitor, ganancia o volumen muy alto.</td><td>Bajar el fader del canal que acopla; alejar el micrófono; revisar la ecualización.</td></tr>
+                        <tr><td><strong>Micrófono inalámbrico no suena</strong></td><td>Baterías, canal muteado, grupo de muteo activo.</td><td>Pilas nuevas; micrófono encendido; canal y grupo de muteo en la X32; receptor con señal.</td></tr>
+                        <tr><td><strong>Se oye ruido o zumbido</strong></td><td>Cable defectuoso o mal conectado, interferencia.</td><td>Desconectar uno a uno para localizar el canal; cambiar el cable; separar cables de audio y de corriente.</td></tr>
+                        <tr><td><strong>Pantallas del templo en negro</strong></td><td>Splitter HDMI sin energía, cable suelto, salida del PC.</td><td>Splitter encendido; cables HDMI de los TVs; salida de video del PC de transmisión.</td></tr>
+                        <tr><td><strong>Aparecen letras/avisos en la imagen de la Cámara 1</strong></td><td>Información en pantalla (OSD) activada.</td><td>Presionar el obturador para ocultarla.</td></tr>
+                        <tr><td><strong>La Cámara 1 se ve negra</strong></td><td>Protector del lente puesto, cámara apagada, falta de energía.</td><td>Quitar el protector; que la cámara esté encendida; las 2 fuentes de energía (cámara y convertidor) conectadas.</td></tr>
                     </tbody>
                 </table>
+            </div>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900 flex gap-3">
+                <i class="fa-solid fa-circle-info text-xl text-amber-500 flex-shrink-0"></i>
+                <p><strong>Importante:</strong> si un problema no se resuelve en un par de minutos, comunícalo al líder del equipo. Es mejor pedir ayuda a tiempo que arriesgar el servicio.</p>
             </div>
         </div>
 
         <!-- Tab: Evaluacion -->
         <div id="evaluacion" class="tab-content">
             <div class="max-w-3xl mx-auto">
-                <h2 class="text-3xl font-extrabold text-orange-800 mb-2 text-center">Evaluación</h2>
+                <h2 class="text-3xl font-extrabold text-orange-800 mb-2 text-center">Evaluación de Conocimientos</h2>
+                <p class="text-center text-slate-500 mb-8">Comprueba qué tanto has aprendido.</p>
+                
                 <div id="quiz-container" class="bg-white rounded-2xl shadow-lg border border-orange-100 p-6 sm:p-10 relative overflow-hidden">
                     <div id="quiz-intro" class="text-center">
                         <div class="w-24 h-24 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center text-4xl mx-auto mb-6"><i class="fa-solid fa-clipboard-question"></i></div>
                         <h3 class="text-2xl font-bold text-slate-800 mb-4">¿Listo para comenzar?</h3>
+                        <p class="text-slate-600 mb-8">El cuestionario consta de 8 preguntas. Al final te daremos recomendaciones personalizadas.</p>
                         <button onclick="startQuiz()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1">Iniciar Evaluación</button>
                     </div>
+                    
                     <div id="quiz-question-area" class="hidden">
                         <div class="flex justify-between items-center mb-6 text-sm font-bold text-slate-400">
-                            <span id="quiz-progress">Pregunta 1</span>
+                            <span id="quiz-progress">Pregunta 1 de 8</span>
                             <span id="quiz-topic-badge" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full uppercase text-xs">Módulo</span>
                         </div>
                         <h3 id="question-text" class="text-xl sm:text-2xl font-bold text-slate-800 mb-6 leading-tight">¿Pregunta?</h3>
@@ -474,10 +599,18 @@
                             <button id="next-btn" onclick="nextQuestion()" class="hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg transition-colors">Siguiente <i class="fa-solid fa-arrow-right ml-2"></i></button>
                         </div>
                     </div>
+                    
                     <div id="quiz-results" class="hidden text-center">
                         <div id="result-icon" class="w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6"></div>
                         <h3 id="result-title" class="text-3xl font-bold mb-2">Resultados</h3>
-                        <p class="text-lg text-slate-600 mb-6">Puntuación: <span id="score-text" class="font-black text-2xl"></span></p>
+                        <p class="text-lg text-slate-600 mb-6">Tu puntuación: <span id="score-text" class="font-black text-2xl"></span></p>
+                        
+                        <div id="recommendations-box" class="bg-orange-50 rounded-xl p-6 text-left border border-orange-200 hidden">
+                            <h4 class="font-bold text-orange-800 mb-3 flex items-center"><i class="fa-solid fa-book-open mr-2"></i> Recomendaciones de Estudio:</h4>
+                            <p class="text-sm text-slate-600 mb-3">Sugerimos repasar estos módulos:</p>
+                            <ul id="recommendations-list" class="list-disc pl-5 space-y-2 text-orange-700 font-semibold"></ul>
+                        </div>
+                        
                         <button onclick="resetQuiz()" class="mt-8 border-2 border-slate-300 text-slate-600 hover:bg-slate-50 font-bold py-2 px-6 rounded-lg transition-colors">Volver a intentar</button>
                     </div>
                 </div>
@@ -516,7 +649,7 @@
         </div>
     </div>
 
-    <!-- Modal: Petición de Contraseña (Reemplaza a prompt) -->
+    <!-- Modal: Petición de Contraseña -->
     <div id="password-modal" class="modal-overlay fixed inset-0 z-[120] items-center justify-center p-4 bg-slate-900/60" role="dialog">
         <div class="modal-card bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm">
             <h3 class="font-bold text-xl text-slate-800 mb-2"><i class="fa-solid fa-lock text-slate-500 mr-2"></i> Acceso Admin</h3>
@@ -527,18 +660,6 @@
                 <button onclick="closePasswordPrompt()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors">Cancelar</button>
                 <button onclick="verifyPassword()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors">Ingresar</button>
             </div>
-        </div>
-    </div>
-
-    <!-- Modal: Alert (Reemplaza a alert) -->
-    <div id="alert-modal" class="modal-overlay fixed inset-0 z-[130] items-center justify-center p-4 bg-slate-900/60" role="dialog">
-        <div class="modal-card bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
-            <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <h3 class="font-bold text-xl text-slate-800 mb-2" id="alert-title">¡Éxito!</h3>
-            <p class="text-sm text-slate-600 mb-6" id="alert-msg">Los datos se han guardado correctamente.</p>
-            <button onclick="closeAlert()" class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors">Aceptar</button>
         </div>
     </div>
 
@@ -570,12 +691,12 @@
                             </tr>
                         </thead>
                         <tbody id="cfg-roles-body">
-                            <!-- Generado dinámicamente por JS -->
+                            <!-- Generado dinámicamente -->
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Notas (Tener en cuenta) -->
+                <!-- Notas -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-bold text-slate-700">Tener en cuenta (Notas)</h3>
@@ -594,18 +715,26 @@
         </div>
     </div>
 
-    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-sm">
+    <!-- Modal: Alert -->
+    <div id="alert-modal" class="modal-overlay fixed inset-0 z-[130] items-center justify-center p-4 bg-slate-900/60" role="dialog">
+        <div class="modal-card bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm text-center">
+            <div class="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fa-solid fa-check"></i></div>
+            <h3 class="font-bold text-xl text-slate-800 mb-2" id="alert-title">¡Éxito!</h3>
+            <p class="text-sm text-slate-600 mb-6" id="alert-msg">Guardado exitosamente.</p>
+            <button onclick="closeAlert()" class="w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors">Aceptar</button>
+        </div>
+    </div>
+
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-sm mt-auto">
         <p>Equipo de Comunicaciones &copy; 2026. Diseñado para la excelencia.</p>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // ================= INTEGRACIÓN CON FIREBASE =================
-        // INSTRUCCIONES: Pega aquí los datos de tu proyecto de Firebase (Firebase Console -> Project Settings -> General -> Web Apps). 
-        // Si lo dejas vacío, la app seguirá funcionando de manera local.
+        // ================= FIREBASE =================
         const MIS_CREDENCIALES_FIREBASE = {
   apiKey: "AIzaSyBP6OvaJJopQCn2PgHvWMXeQAwSoLK-7A0",
   authDomain: "comunicaciones-ff4ae.firebaseapp.com",
@@ -616,21 +745,19 @@
   measurementId: "G-3TL2DE0RYX"
 };
 
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : (Object.keys(MIS_CREDENCIALES_FIREBASE).length > 0 ? MIS_CREDENCIALES_FIREBASE : null);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'comunicaciones-app';
-        
+        const appId = 'comunicaciones-app';
         let app, db, auth, currentUser;
 
-        if (firebaseConfig) {
+        if (Object.keys(MIS_CREDENCIALES_FIREBASE).length > 0) {
             try {
-                app = initializeApp(firebaseConfig);
+                app = initializeApp(MIS_CREDENCIALES_FIREBASE);
                 db = getFirestore(app);
                 auth = getAuth(app);
-            } catch (e) { console.warn("Error inicializando Firebase", e); }
+            } catch (e) { console.warn("Error Firebase", e); }
         }
 
-        // ================= CONFIGURACIÓN Y ESTADO DE LA SEMANA =================
-        const ADMIN_PASSWORD = "admin"; 
+        // ================= CONFIGURACIÓN SEMANAL =================
+        const ADMIN_PASSWORD = "Proyecta2026."; // Cambia esta contraseña si lo deseas
         const STORAGE_KEY_SEMANA = 'comunicaciones-semana-config';
 
         let semanaInfo = {
@@ -644,11 +771,10 @@
             ],
             notas: [
                 { conIcono: true, texto: 'Reunión virtual próximo lunes 26 a las 8pm, tema: culto misionero.' },
-                { conIcono: true, texto: 'Importante ponernos al día con el aporte mensual.' }
+                { conIcono: true, texto: 'Importante ponernos al día con el aporte mensual, la hna Maritza estará recolectando el aporte.' }
             ]
         };
 
-        // Lógica de inicio con o sin base de datos
         async function initApp() {
             let initialRenderDone = false;
             if (!auth || !db) {
@@ -657,15 +783,9 @@
                 openWeekly();
                 return;
             }
-
             try {
-                if (typeof __initial_auth_token !== 'undefined') {
-                    const cred = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = cred.user;
-                } else {
-                    const cred = await signInAnonymously(auth);
-                    currentUser = cred.user;
-                }
+                const cred = await signInAnonymously(auth);
+                currentUser = cred.user;
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'semana');
                 onSnapshot(docRef, (docSnap) => {
@@ -675,10 +795,7 @@
                         setDoc(docRef, semanaInfo).catch(e => console.error(e));
                     }
                     renderWeekly();
-                    if (!initialRenderDone) {
-                        openWeekly();
-                        initialRenderDone = true;
-                    }
+                    if (!initialRenderDone) { openWeekly(); initialRenderDone = true; }
                 }, (error) => {
                     console.error("Error escuchando datos:", error);
                     loadLocalData();
@@ -686,7 +803,7 @@
                     if (!initialRenderDone) { openWeekly(); initialRenderDone = true; }
                 });
             } catch (e) {
-                console.error("Error Firebase:", e);
+                console.error("Error Firebase Auth:", e);
                 loadLocalData();
                 renderWeekly();
                 openWeekly();
@@ -697,34 +814,37 @@
             try {
                 const saved = localStorage.getItem(STORAGE_KEY_SEMANA);
                 if (saved) semanaInfo = JSON.parse(saved);
-            } catch (e) { console.error("Error load", e); }
+            } catch (e) {}
         }
 
-        // ================= EXPORTAR A WINDOW PARA EL HTML =================
-        // Al usar type="module", las funciones no son globales por defecto, así que las exportamos
-        window.openWeekly = function() { openWeekly(); };
-        window.closeWeekly = function() { closeWeekly(); };
-        window.openPasswordPrompt = function() { openPasswordPrompt(); };
-        window.closePasswordPrompt = function() { closePasswordPrompt(); };
-        window.verifyPassword = function() { verifyPassword(); };
-        window.openAdminModal = function() { openAdminModal(); };
-        window.closeAdminModal = function() { closeAdminModal(); };
-        window.closeAlert = function() { closeAlert(); };
-        window.addCfgNote = function() { addCfgNote(); };
-        window.saveAdminConfig = function() { saveAdminConfig(); };
-        window.openTab = function(tab) { openTab(tab); };
-        window.resetChecklist = function() { resetChecklist(); };
-        window.startQuiz = function() { startQuiz(); };
-        window.resetQuiz = function() { resetQuiz(); };
-        window.nextQuestion = function() { nextQuestion(); };
+        // ================= EXPORTAR FUNCIONES AL SCOPE GLOBAL =================
+        window.openWeekly = () => { document.getElementById('weekly-modal').classList.add('open'); document.body.classList.add('overflow-hidden'); };
+        window.closeWeekly = () => { document.getElementById('weekly-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
+        window.openPasswordPrompt = () => { document.getElementById('admin-pass-input').value = ''; document.getElementById('admin-pass-error').classList.add('hidden'); document.getElementById('password-modal').classList.add('open'); document.getElementById('admin-pass-input').focus(); };
+        window.closePasswordPrompt = () => document.getElementById('password-modal').classList.remove('open');
+        window.verifyPassword = () => { if (document.getElementById('admin-pass-input').value === ADMIN_PASSWORD) { window.closePasswordPrompt(); window.openAdminModal(); } else { document.getElementById('admin-pass-error').classList.remove('hidden'); } };
+        window.openAdminModal = () => { populateAdminForm(); document.getElementById('admin-modal').classList.add('open'); document.body.classList.add('overflow-hidden'); };
+        window.closeAdminModal = () => { document.getElementById('admin-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
+        window.closeAlert = () => document.getElementById('alert-modal').classList.remove('open');
+        window.addCfgNote = () => appendCfgNoteUI('', true, document.querySelectorAll('.cfg-note-row').length);
+        window.saveAdminConfig = async () => await saveConfig();
+        window.openTab = (t) => handleOpenTab(t);
+        window.resetChecklist = () => handleResetChecklist();
+        window.startQuiz = () => handleStartQuiz();
+        window.resetQuiz = () => handleResetQuiz();
+        window.nextQuestion = () => handleNextQuestion();
+        window.selectOption = (i, btn) => handleSelectOption(i, btn);
 
-        // ================= LÓGICA DEL POPUP SEMANAL (PÚBLICO) =================
-        let weeklyLastFocus = null;
+        // Permitir 'Enter' en password
+        document.getElementById('admin-pass-input').addEventListener('keypress', (e) => { if(e.key === 'Enter') window.verifyPassword(); });
+        
+        // Cerrar modales clicando afuera
+        document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target === m) { m.classList.remove('open'); document.body.classList.remove('overflow-hidden'); } }));
 
+        // ================= LÓGICA DE INTERFAZ SEMANAL =================
         function renderWeekly() {
             document.getElementById('weekly-title').innerText = semanaInfo.titulo;
 
-            // Tabla (sm y superior)
             let html = '<table><thead><tr><th>Rol</th>';
             semanaInfo.dias.forEach(d => { html += `<th class="text-center">${d}</th>`; });
             html += '</tr></thead><tbody>';
@@ -736,84 +856,81 @@
             html += '</tbody></table>';
             document.getElementById('weekly-table').innerHTML = html;
 
-            // Tarjetas por día (celular)
             let cards = '';
             semanaInfo.dias.forEach((d, i) => {
-                cards += `<div class="bg-orange-50 border border-orange-200 rounded-xl overflow-hidden">
-                    <div class="bg-orange-100 text-orange-800 font-bold px-4 py-2">${d}</div>
-                    <ul class="divide-y divide-orange-100">`;
+                cards += `<div class="bg-orange-50 border border-orange-200 rounded-xl overflow-hidden"><div class="bg-orange-100 text-orange-800 font-bold px-4 py-2">${d}</div><ul class="divide-y divide-orange-100">`;
                 semanaInfo.roles.forEach(r => {
-                    cards += `<li class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                        <span class="font-bold text-orange-800"><i class="fa-solid ${r.icono} text-orange-500 mr-2"></i>${r.rol}</span>
-                        <span class="font-semibold text-slate-700 text-right">${r.personas[i] || '-'}</span>
-                    </li>`;
+                    cards += `<li class="flex items-center justify-between gap-3 px-4 py-2 text-sm"><span class="font-bold text-orange-800"><i class="fa-solid ${r.icono} text-orange-500 mr-2"></i>${r.rol}</span><span class="font-semibold text-slate-700 text-right">${r.personas[i] || '-'}</span></li>`;
                 });
                 cards += '</ul></div>';
             });
             document.getElementById('weekly-cards').innerHTML = cards;
 
-            // Tener en cuenta (Notas)
             let notes = '';
-            if(semanaInfo.notas.length === 0) {
-                document.getElementById('weekly-notes-container').classList.add('hidden');
-            } else {
+            if(semanaInfo.notas.length === 0) { document.getElementById('weekly-notes-container').classList.add('hidden'); } 
+            else {
                 document.getElementById('weekly-notes-container').classList.remove('hidden');
                 semanaInfo.notas.forEach(n => {
-                    const iconHTML = n.conIcono ? `<i class="fa-solid fa-circle-exclamation text-amber-500 mt-1"></i>` : `<i class="fa-solid fa-minus text-amber-300 mt-1"></i>`;
-                    notes += `<li class="flex items-start gap-3">${iconHTML}<span>${n.texto}</span></li>`;
+                    const icon = n.conIcono ? `<i class="fa-solid fa-circle-exclamation text-amber-500 mt-1"></i>` : `<i class="fa-solid fa-minus text-amber-300 mt-1"></i>`;
+                    notes += `<li class="flex items-start gap-3">${icon}<span>${n.texto}</span></li>`;
                 });
             }
             document.getElementById('weekly-notes').innerHTML = notes;
         }
 
-        function openWeekly() {
-            weeklyLastFocus = document.activeElement;
-            document.getElementById('weekly-modal').classList.add('open');
-            document.body.classList.add('overflow-hidden');
+        // ================= PANEL ADMIN =================
+        function populateAdminForm() {
+            document.getElementById('cfg-titulo').value = semanaInfo.titulo;
+            for(let i=0; i<3; i++) { document.getElementById(`cfg-dia-${i}`).value = semanaInfo.dias[i] || ''; }
+
+            const tbody = document.getElementById('cfg-roles-body');
+            tbody.innerHTML = '';
+            semanaInfo.roles.forEach((r, rIdx) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `<td class="py-2 font-semibold text-slate-700 whitespace-nowrap"><i class="fa-solid ${r.icono} text-slate-400 mr-2 w-4"></i> ${r.rol}</td>`;
+                for(let i=0; i<3; i++) {
+                    tr.innerHTML += `<td class="py-2 px-1"><input type="text" id="cfg-p-${rIdx}-${i}" class="w-full border border-slate-300 p-1.5 rounded text-sm focus:ring-1 focus:ring-orange-500 outline-none" value="${r.personas[i] || ''}"></td>`;
+                }
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('cfg-notas-container').innerHTML = '';
+            semanaInfo.notas.forEach((n, nIdx) => appendCfgNoteUI(n.texto, n.conIcono, nIdx));
         }
 
-        function closeWeekly() {
-            document.getElementById('weekly-modal').classList.remove('open');
-            document.body.classList.remove('overflow-hidden');
-            if (weeklyLastFocus && weeklyLastFocus.focus) weeklyLastFocus.focus();
+        function appendCfgNoteUI(texto, conIcono, idx) {
+            const container = document.getElementById('cfg-notas-container');
+            const div = document.createElement('div');
+            div.className = "flex items-start gap-3 bg-slate-100 p-3 rounded border border-slate-200 cfg-note-row";
+            div.innerHTML = `<div class="flex flex-col gap-1 items-center justify-center mt-1"><label class="text-[10px] font-bold text-slate-500 uppercase">Ícono</label><input type="checkbox" class="cfg-note-icon w-4 h-4 accent-orange-500" ${conIcono ? 'checked' : ''}></div><textarea class="cfg-note-text w-full flex-grow border border-slate-300 p-2 rounded text-sm min-h-[60px] outline-none focus:ring-1 focus:ring-orange-500">${texto}</textarea><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash"></i></button>`;
+            container.appendChild(div);
         }
 
-        // ================= PANEL DE ADMINISTRACIÓN =================
-        function openPasswordPrompt() {
-            document.getElementById('admin-pass-input').value = '';
-            document.getElementById('admin-pass-error').classList.add('hidden');
-            document.getElementById('password-modal').classList.add('open');
-            document.getElementById('admin-pass-input').focus();
-        }
+        async function saveConfig() {
+            semanaInfo.titulo = document.getElementById('cfg-titulo').value;
+            semanaInfo.dias = [document.getElementById('cfg-dia-0').value, document.getElementById('cfg-dia-1').value, document.getElementById('cfg-dia-2').value];
+            semanaInfo.roles = semanaInfo.roles.map((r, rIdx) => ({
+                rol: r.rol, icono: r.icono, personas: [document.getElementById(`cfg-p-${rIdx}-0`).value, document.getElementById(`cfg-p-${rIdx}-1`).value, document.getElementById(`cfg-p-${rIdx}-2`).value]
+            }));
+            
+            const notas = [];
+            document.querySelectorAll('.cfg-note-row').forEach(row => {
+                const texto = row.querySelector('.cfg-note-text').value.trim();
+                if(texto) notas.push({ conIcono: row.querySelector('.cfg-note-icon').checked, texto });
+            });
+            semanaInfo.notas = notas;
 
-        function closePasswordPrompt() {
-            document.getElementById('password-modal').classList.remove('open');
-        }
-
-        function verifyPassword() {
-            const input = document.getElementById('admin-pass-input').value;
-            if (input === ADMIN_PASSWORD) {
-                closePasswordPrompt();
-                openAdminModal();
+            if (db && currentUser) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'semana'), semanaInfo);
+                    showAlert('¡Configuración Guardada!', 'Guardado en la nube. Se actualizará para todo el equipo en vivo.');
+                } catch(e) { localStorage.setItem(STORAGE_KEY_SEMANA, JSON.stringify(semanaInfo)); showAlert('Guardado Local', 'Fallo conexión nube, guardado localmente.'); }
             } else {
-                document.getElementById('admin-pass-error').classList.remove('hidden');
+                localStorage.setItem(STORAGE_KEY_SEMANA, JSON.stringify(semanaInfo));
+                showAlert('Guardado Local', 'Sin base de datos, los cambios solo se guardaron en tu dispositivo.');
             }
-        }
-
-        // Permitir usar "Enter" en el modal de password
-        document.getElementById('admin-pass-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') verifyPassword();
-        });
-
-        function openAdminModal() {
-            populateAdminForm();
-            document.getElementById('admin-modal').classList.add('open');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function closeAdminModal() {
-            document.getElementById('admin-modal').classList.remove('open');
-            document.body.classList.remove('overflow-hidden');
+            window.closeAdminModal();
+            if(!db) renderWeekly();
         }
 
         function showAlert(title, msg) {
@@ -822,224 +939,166 @@
             document.getElementById('alert-modal').classList.add('open');
         }
 
-        function closeAlert() {
-            document.getElementById('alert-modal').classList.remove('open');
-        }
-
-        function populateAdminForm() {
-            // Título
-            document.getElementById('cfg-titulo').value = semanaInfo.titulo;
-
-            // Días
-            for(let i=0; i<3; i++) {
-                document.getElementById(`cfg-dia-${i}`).value = semanaInfo.dias[i] || '';
-            }
-
-            // Grid de Roles y Personas
-            const tbody = document.getElementById('cfg-roles-body');
-            tbody.innerHTML = '';
-            semanaInfo.roles.forEach((r, rIdx) => {
-                let tr = document.createElement('tr');
-                let tdRol = document.createElement('td');
-                tdRol.className = "py-2 font-semibold text-slate-700 whitespace-nowrap";
-                tdRol.innerHTML = `<i class="fa-solid ${r.icono} text-slate-400 mr-2 w-4"></i> ${r.rol}`;
-                tr.appendChild(tdRol);
-
-                for(let i=0; i<3; i++) {
-                    let tdPers = document.createElement('td');
-                    tdPers.className = "py-2 px-1";
-                    tdPers.innerHTML = `<input type="text" id="cfg-p-${rIdx}-${i}" class="w-full border border-slate-300 p-1.5 rounded text-sm focus:ring-1 focus:ring-orange-500 outline-none" value="${r.personas[i] || ''}">`;
-                    tr.appendChild(tdPers);
-                }
-                tbody.appendChild(tr);
-            });
-
-            // Notas
-            const notasContainer = document.getElementById('cfg-notas-container');
-            notasContainer.innerHTML = '';
-            semanaInfo.notas.forEach((n, nIdx) => {
-                appendCfgNoteUI(n.texto, n.conIcono, nIdx);
-            });
-        }
-
-        function appendCfgNoteUI(texto, conIcono, idx) {
-            const container = document.getElementById('cfg-notas-container');
-            const div = document.createElement('div');
-            div.className = "flex items-start gap-3 bg-slate-100 p-3 rounded border border-slate-200 cfg-note-row";
-            div.innerHTML = `
-                <div class="flex flex-col gap-1 items-center justify-center mt-1">
-                    <label class="text-[10px] font-bold text-slate-500 uppercase">Ícono</label>
-                    <input type="checkbox" class="cfg-note-icon w-4 h-4 accent-orange-500" ${conIcono ? 'checked' : ''}>
-                </div>
-                <textarea class="cfg-note-text w-full flex-grow border border-slate-300 p-2 rounded text-sm min-h-[60px] outline-none focus:ring-1 focus:ring-orange-500">${texto}</textarea>
-                <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash"></i></button>
-            `;
-            container.appendChild(div);
-        }
-
-        function addCfgNote() {
-            appendCfgNoteUI('', true, document.querySelectorAll('.cfg-note-row').length);
-        }
-
-        async function saveAdminConfig() {
-            // Recoger valores del DOM
-            const nuevoTitulo = document.getElementById('cfg-titulo').value;
-            const nuevosDias = [
-                document.getElementById('cfg-dia-0').value,
-                document.getElementById('cfg-dia-1').value,
-                document.getElementById('cfg-dia-2').value
-            ];
-
-            const nuevosRoles = semanaInfo.roles.map((r, rIdx) => {
-                return {
-                    rol: r.rol,
-                    icono: r.icono,
-                    personas: [
-                        document.getElementById(`cfg-p-${rIdx}-0`).value,
-                        document.getElementById(`cfg-p-${rIdx}-1`).value,
-                        document.getElementById(`cfg-p-${rIdx}-2`).value
-                    ]
-                };
-            });
-
-            const nuevasNotas = [];
-            document.querySelectorAll('.cfg-note-row').forEach(row => {
-                const conIcono = row.querySelector('.cfg-note-icon').checked;
-                const texto = row.querySelector('.cfg-note-text').value.trim();
-                if(texto) { nuevasNotas.push({ conIcono, texto }); }
-            });
-
-            // Actualizar objeto
-            semanaInfo.titulo = nuevoTitulo;
-            semanaInfo.dias = nuevosDias;
-            semanaInfo.roles = nuevosRoles;
-            semanaInfo.notas = nuevasNotas;
-
-            // Guardar en Firebase si está disponible, si no, localmente
-            if (db && currentUser) {
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'semana');
-                    await setDoc(docRef, semanaInfo);
-                    showAlert('¡Configuración Guardada!', 'La información ha sido guardada en la NUBE y se actualizará para todos en tiempo real.');
-                } catch (e) {
-                    console.error("Error guardando en Firestore:", e);
-                    localStorage.setItem(STORAGE_KEY_SEMANA, JSON.stringify(semanaInfo));
-                    showAlert('Guardado Localmente', 'Ocurrió un error con la nube, se guardó solo en este dispositivo.');
-                }
-            } else {
-                localStorage.setItem(STORAGE_KEY_SEMANA, JSON.stringify(semanaInfo));
-                showAlert('Guardado Localmente', 'Como no hay base de datos configurada, se guardó solo en este dispositivo.');
-            }
-            
-            closeAdminModal();
-            // Si usamos BD, el listener 'onSnapshot' de arriba volverá a dibujar la vista en vivo automáticamente.
-            if (!db) renderWeekly(); 
-        }
-
-        // ================= NAVEGACIÓN Y SWIPE =================
+        // ================= TABS Y SWIPE =================
         const tabsOrder = ['inicio', 'camaras', 'textos', 'transmision', 'sonido', 'esquema', 'checklist', 'problemas', 'evaluacion'];
-
-        function openTab(tabId) {
+        function handleOpenTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'text-orange-600', 'border-orange-500', 'text-emerald-700', 'border-emerald-500');
-                if(btn.dataset.target === 'evaluacion') {
-                   btn.classList.add('text-emerald-600', 'border-transparent');
-                } else {
-                   btn.classList.add('text-slate-500', 'border-transparent');
-                }
+                btn.dataset.target === 'evaluacion' ? btn.classList.add('text-emerald-600', 'border-transparent') : btn.classList.add('text-slate-500', 'border-transparent');
             });
 
             document.getElementById(tabId).classList.add('active');
-            
             const activeBtn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
             if(activeBtn) {
-                if(tabId === 'evaluacion') {
-                    activeBtn.classList.remove('text-emerald-600', 'border-transparent');
-                    activeBtn.classList.add('active', 'text-emerald-700', 'border-emerald-500');
-                } else {
-                    activeBtn.classList.remove('text-slate-500', 'border-transparent');
-                    activeBtn.classList.add('active', 'text-orange-600', 'border-orange-500');
-                }
+                if(tabId === 'evaluacion') { activeBtn.classList.remove('text-emerald-600', 'border-transparent'); activeBtn.classList.add('active', 'text-emerald-700', 'border-emerald-500'); }
+                else { activeBtn.classList.remove('text-slate-500', 'border-transparent'); activeBtn.classList.add('active', 'text-orange-600', 'border-orange-500'); }
                 activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Lógica de Swipe
-        let touchstartX = 0;
-        let touchstartY = 0;
-        let touchendX = 0;
-        let touchendY = 0;
-
+        let touchstartX = 0, touchstartY = 0, touchendX = 0, touchendY = 0;
+        document.getElementById('swipe-area').addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, { passive: true });
+        document.getElementById('swipe-area').addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; handleGesture(); }, { passive: true });
+        
         function handleGesture() {
-            const diffX = touchendX - touchstartX;
-            const diffY = Math.abs(touchendY - touchstartY);
-            const swipeThreshold = 60; // Píxeles mínimos para considerar un swipe
-
-            // Verificar si el movimiento horizontal es mayor que el vertical (evita detectar scroll hacia abajo como swipe)
-            if (Math.abs(diffX) > swipeThreshold && Math.abs(diffX) > diffY) {
+            const diffX = touchendX - touchstartX, diffY = Math.abs(touchendY - touchstartY);
+            if (Math.abs(diffX) > 60 && Math.abs(diffX) > diffY) {
                 const currentActive = document.querySelector('.tab-content.active');
                 if(!currentActive) return;
-                
-                const currentIndex = tabsOrder.indexOf(currentActive.id);
-                
-                if (diffX < 0) {
-                    // Swipe Left (Deslizó el dedo a la izquierda) -> Siguiente Tab
-                    if (currentIndex < tabsOrder.length - 1) {
-                        openTab(tabsOrder[currentIndex + 1]);
-                    }
-                } else {
-                    // Swipe Right (Deslizó el dedo a la derecha) -> Tab Anterior
-                    if (currentIndex > 0) {
-                        openTab(tabsOrder[currentIndex - 1]);
-                    }
-                }
+                const idx = tabsOrder.indexOf(currentActive.id);
+                if (diffX < 0 && idx < tabsOrder.length - 1) handleOpenTab(tabsOrder[idx + 1]);
+                else if (diffX > 0 && idx > 0) handleOpenTab(tabsOrder[idx - 1]);
             }
         }
 
-        const swipeArea = document.getElementById('swipe-area');
-        swipeArea.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-            touchstartY = e.changedTouches[0].screenY;
-        }, { passive: true });
-
-        swipeArea.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            touchendY = e.changedTouches[0].screenY;
-            handleGesture();
-        }, { passive: true });
-
-
-        // Inicialización General
-        initApp(); // Conecta a Firebase, carga los datos y abre el popup automáticamente
+        // ================= CHECKLIST =================
+        const STORAGE_KEY_CHECK = 'comunicaciones-checklist-v3';
+        function loadChecks() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY_CHECK)) || {}; } catch(e) { return {}; } }
+        function saveChecks(s) { try { localStorage.setItem(STORAGE_KEY_CHECK, JSON.stringify(s)); } catch(e){} }
         
-        // Checklist simplificada
-        const STORAGE_KEY_CHECK = 'comunicaciones-check';
         function updateChecklistProgress() {
             const boxes = document.querySelectorAll('input[data-check]');
             const done = [...boxes].filter(b => b.checked).length;
             const pct = boxes.length ? Math.round((done / boxes.length) * 100) : 0;
             document.getElementById('check-progress-text').innerText = `${done} de ${boxes.length} (${pct}%)`;
             document.getElementById('check-progress-bar').style.width = pct + '%';
+
+            document.querySelectorAll('[data-section]').forEach(sec => {
+                const id = sec.dataset.section, sb = sec.querySelectorAll('input[data-check]');
+                const sd = [...sb].filter(b => b.checked).length, sp = sb.length ? Math.round((sd / sb.length) * 100) : 0;
+                sec.querySelector(`[data-section-text="${id}"]`).innerText = `${sd} de ${sb.length} (${sp}%)`;
+                sec.querySelector(`[data-section-bar="${id}"]`).style.width = sp + '%';
+            });
         }
-        function resetChecklist() {
-            document.querySelectorAll('input[data-check]').forEach(b => b.checked = false);
-            updateChecklistProgress();
-        }
+        
+        const state = loadChecks();
         document.querySelectorAll('input[data-check]').forEach(box => {
-            box.addEventListener('change', updateChecklistProgress);
+            box.checked = !!state[box.dataset.check];
+            box.addEventListener('change', () => { const s = loadChecks(); s[box.dataset.check] = box.checked; saveChecks(s); updateChecklistProgress(); });
         });
+        updateChecklistProgress();
 
-        // Quiz Básico (Simplificado por brevedad, usa la estructura original provista)
-        const quizData = [ { topic: "camaras", moduleName: "Cámaras", question: "¿Con cuánto tiempo de anticipación debes llegar?", options: ["15 min", "30 min", "1 hora", "2 horas"], answer: 2 } ];
-        function startQuiz() { document.getElementById('quiz-intro').classList.add('hidden'); document.getElementById('quiz-question-area').classList.remove('hidden'); document.getElementById('options-container').innerHTML = '<button onclick="this.className=\'w-full bg-emerald-100 p-4 rounded text-left font-bold text-emerald-800 border-2 border-emerald-500\'; setTimeout(()=>resetQuiz(), 2000)" class="w-full text-left p-4 rounded-xl border-2 border-slate-200 font-semibold text-slate-700">1 hora</button>'; }
-        function resetQuiz() { document.getElementById('quiz-intro').classList.remove('hidden'); document.getElementById('quiz-question-area').classList.add('hidden'); }
+        function handleResetChecklist() { document.querySelectorAll('input[data-check]').forEach(b => b.checked = false); saveChecks({}); updateChecklistProgress(); }
 
-        // Cerrar modales si se hace clic fuera
-        document.querySelectorAll('.modal-overlay').forEach(modal => {
-            modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('open'); document.body.classList.remove('overflow-hidden');});
-        });
+        // ================= QUIZ (EVALUACIÓN) =================
+        const quizData = [
+            { topic: "camaras", moduleName: "Cámaras", question: "¿Con cuánto tiempo de anticipación debes llegar para preparar los equipos?", options: ["15 minutos", "30 minutos", "1 hora", "2 horas"], answer: 2 },
+            { topic: "camaras", moduleName: "Cámaras", question: "¿Qué se debe hacer al encender la Cámara 1 para quitar el mensaje de pantalla?", options: ["Apagarla y prenderla", "Presionar el botón del obturador", "Desconectar el HDMI", "Ajustar el Zoom"], answer: 1 },
+            { topic: "textos", moduleName: "Textos y Proyección", question: "¿Cómo debe ingresarse estrictamente la letra de las canciones en Holyrics?", options: ["En minúsculas", "Formato Título", "En MAYÚSCULAS", "Sin acentos"], answer: 2 },
+            { topic: "camaras", moduleName: "Cámaras", question: "Durante la predicación, ¿Qué cámara se mueve por el templo haciendo tomas de apoyo?", options: ["Cámara 1", "Cámara de Cabina", "Cámara de Altar", "Cámara 2 (Móvil)"], answer: 3 },
+            { topic: "transmision", moduleName: "Transmisión", question: "En vMix, ¿Qué tecla presionas para activar el video/cortinilla de inicio?", options: ["Tecla F", "Tecla I", "Barra Espaciadora", "Enter"], answer: 1 },
+            { topic: "sonido", moduleName: "Sonido", question: "Al apagar el sistema, ¿Cuál es el orden correcto?", options: ["Apagar todo al mismo tiempo", "Apagar consola y luego plantas", "Apagar plantas de potencia y luego consola", "Desconectar la energía principal"], answer: 2 },
+            { topic: "sonido", moduleName: "Sonido", question: "¿Qué grupo de muteo en la X32 se debe activar para la Alabanza/Banda?", options: ["Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4"], answer: 0 },
+            { topic: "esquema", moduleName: "Esquema Técnico", question: "¿Qué software central se utiliza en el Computador de Transmisión?", options: ["OBS Studio", "vMix", "Wirecast", "Blackmagic ATEM"], answer: 1 }
+        ];
+
+        let currentQuestion = 0, score = 0, wrongTopics = new Set();
+        
+        function handleStartQuiz() {
+            currentQuestion = 0; score = 0; wrongTopics.clear();
+            document.getElementById('quiz-intro').classList.add('hidden'); document.getElementById('quiz-results').classList.add('hidden'); document.getElementById('quiz-question-area').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            document.getElementById('next-btn').classList.add('hidden');
+            const q = quizData[currentQuestion];
+            document.getElementById('quiz-progress').innerText = `Pregunta ${currentQuestion + 1} de ${quizData.length}`;
+            document.getElementById('quiz-topic-badge').innerText = q.moduleName;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const optsContainer = document.getElementById('options-container');
+            optsContainer.innerHTML = '';
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-orange-400 hover:bg-orange-50 transition-all font-semibold text-slate-700 option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => window.selectOption(index, btn);
+                optsContainer.appendChild(btn);
+            });
+        }
+
+        function handleSelectOption(selectedIndex, btnElement) {
+            if(!document.getElementById('next-btn').classList.contains('hidden')) return;
+            const q = quizData[currentQuestion], allBtns = document.querySelectorAll('.option-btn');
+            allBtns.forEach(b => { b.classList.remove('hover:border-orange-400', 'hover:bg-orange-50'); b.classList.add('opacity-50', 'cursor-not-allowed'); });
+
+            if(selectedIndex === q.answer) {
+                btnElement.classList.remove('border-slate-200', 'opacity-50');
+                btnElement.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-800', 'opacity-100');
+                btnElement.innerHTML += ' <i class="fa-solid fa-circle-check float-right text-xl text-emerald-500"></i>';
+                score++;
+            } else {
+                btnElement.classList.remove('border-slate-200', 'opacity-50');
+                btnElement.classList.add('border-red-500', 'bg-red-50', 'text-red-800', 'opacity-100');
+                btnElement.innerHTML += ' <i class="fa-solid fa-circle-xmark float-right text-xl text-red-500"></i>';
+                allBtns[q.answer].classList.remove('border-slate-200', 'opacity-50');
+                allBtns[q.answer].classList.add('border-emerald-500', 'bg-emerald-50', 'opacity-100');
+                wrongTopics.add(JSON.stringify({id: q.topic, name: q.moduleName}));
+            }
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function handleNextQuestion() {
+            currentQuestion++;
+            currentQuestion < quizData.length ? loadQuestion() : showResults();
+        }
+
+        function showResults() {
+            document.getElementById('quiz-question-area').classList.add('hidden'); document.getElementById('quiz-results').classList.remove('hidden');
+            const pct = (score / quizData.length) * 100;
+            document.getElementById('score-text').innerText = `${score} / ${quizData.length} (${pct}%)`;
+            
+            const icon = document.getElementById('result-icon'), title = document.getElementById('result-title');
+            if(pct === 100) {
+                icon.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-emerald-100 text-emerald-500'; icon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                title.innerText = '¡Excelente Trabajo!'; title.className = 'text-3xl font-bold mb-2 text-emerald-600';
+            } else if (pct >= 70) {
+                icon.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-orange-100 text-orange-500'; icon.innerHTML = '<i class="fa-solid fa-thumbs-up"></i>';
+                title.innerText = '¡Muy Bien!'; title.className = 'text-3xl font-bold mb-2 text-orange-600';
+            } else {
+                icon.className = 'w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl mb-6 bg-red-100 text-red-500'; icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                title.innerText = 'Hay oportunidad de mejora'; title.className = 'text-3xl font-bold mb-2 text-red-600';
+            }
+
+            const recBox = document.getElementById('recommendations-box'), recList = document.getElementById('recommendations-list');
+            recList.innerHTML = '';
+            if(wrongTopics.size > 0) {
+                recBox.classList.remove('hidden');
+                Array.from(wrongTopics).map(t => JSON.parse(t)).forEach(topic => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<button onclick="window.openTab('${topic.id}')" class="underline hover:text-orange-900 transition-colors">Repasar módulo de ${topic.name}</button>`;
+                    recList.appendChild(li);
+                });
+            } else { recBox.classList.add('hidden'); }
+        }
+
+        function handleResetQuiz() { document.getElementById('quiz-results').classList.add('hidden'); document.getElementById('quiz-intro').classList.remove('hidden'); }
+
+        // Inicializar app principal
+        initApp();
     </script>
 </body>
 </html>
