@@ -18,6 +18,8 @@
         ::-webkit-scrollbar-track { background: #fff7ed; }
         ::-webkit-scrollbar-thumb { background: #fb923c; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #f97316; }
+        .hide-scrollbar { scrollbar-width: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
@@ -27,9 +29,22 @@
         .table-wrapper { overflow-x: auto; border-radius: 0.5rem; border: 1px solid #fed7aa; }
         table { width: 100%; text-align: left; border-collapse: collapse; }
         th { background-color: #ffedd5; padding: 0.75rem 1rem; color: #c2410c; font-weight: 700; }
-        td { padding: 0.75rem 1rem; border-bottom: 1px solid #ffedd5; color: #4a5568; }
+        td { padding: 0.75rem 1rem; border-bottom: 1px solid #ffedd5; color: #4a5568; vertical-align: top; }
         tr:last-child td { border-bottom: none; }
+
+        /* Checklist */
+        .check-item { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.5rem 0.25rem; cursor: pointer; border-radius: 0.5rem; }
+        .check-item:hover { background: #fff7ed; }
+        .check-item input { margin-top: 0.3rem; width: 1.1rem; height: 1.1rem; accent-color: #f97316; flex-shrink: 0; }
+        .check-item input:checked + span { text-decoration: line-through; color: #94a3b8; }
         
+        /* Popup semanal */
+        #weekly-modal { display: none; }
+        #weekly-modal.open { display: flex; animation: fadeInOverlay 0.25s ease-out; }
+        #weekly-card { animation: popIn 0.3s ease-out; }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
         /* Fallback warning if CSS fails to load */
         .tailwind-warning { background-color: #ef4444; color: white; padding: 1rem; text-align: center; font-weight: bold; }
     </style>
@@ -52,8 +67,13 @@
                     <p class="text-sm text-orange-600 font-semibold">Plataforma de Capacitación</p>
                 </div>
             </div>
-            <div class="text-sm text-slate-500 italic text-center sm:text-right">
-                "Haciéndolo todo con excelencia"
+            <div class="flex flex-col items-center sm:items-end gap-2">
+                <div class="text-sm text-slate-500 italic text-center sm:text-right">
+                    "Haciéndolo todo con excelencia"
+                </div>
+                <button onclick="openWeekly()" class="text-xs sm:text-sm font-bold text-orange-700 bg-orange-100 hover:bg-orange-200 px-3 py-1.5 rounded-full transition-colors">
+                    <i class="fa-regular fa-calendar-days mr-1"></i> Programación de la semana
+                </button>
             </div>
         </div>
 
@@ -75,6 +95,12 @@
             </button>
             <button onclick="openTab('esquema')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="esquema">
                 <i class="fa-solid fa-network-wired mr-1"></i> Esquema
+            </button>
+            <button onclick="openTab('checklist')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="checklist">
+                <i class="fa-solid fa-list-check mr-1"></i> Checklist
+            </button>
+            <button onclick="openTab('problemas')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="problemas">
+                <i class="fa-solid fa-screwdriver-wrench mr-1"></i> Problemas
             </button>
             <button onclick="openTab('evaluacion')" class="tab-btn ml-auto px-4 py-3 text-sm sm:text-base font-bold text-emerald-600 border-b-4 border-transparent hover:text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap" data-target="evaluacion">
                 <i class="fa-solid fa-graduation-cap mr-1"></i> Evaluación
@@ -375,6 +401,249 @@
             </div>
         </div>
 
+        <!-- ================= CHECKLIST ================= -->
+        <div id="checklist" class="tab-content">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <h2 class="text-3xl font-extrabold text-orange-800 flex items-center gap-3"><i class="fa-solid fa-list-check text-orange-500"></i> Checklist del Servicio</h2>
+                <button onclick="resetChecklist()" class="text-sm font-bold border-2 border-slate-300 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Reiniciar checklist
+                </button>
+            </div>
+            <p class="text-slate-600 mb-6">Marca cada punto a medida que lo completas. Tu progreso se guarda en este navegador. <strong>Antes:</strong> domingos 1 hora antes, entre semana media hora antes.</p>
+
+            <div class="bg-white rounded-xl border border-orange-100 shadow-sm p-4 mb-6">
+                <div class="flex justify-between text-sm font-bold text-slate-500 mb-2">
+                    <span>Progreso total</span><span id="check-progress-text">0%</span>
+                </div>
+                <div class="w-full bg-orange-100 rounded-full h-3 overflow-hidden">
+                    <div id="check-progress-bar" class="bg-orange-500 h-3 rounded-full transition-all" style="width:0%"></div>
+                </div>
+            </div>
+
+            <div class="space-y-8 mb-8">
+
+                <!-- ===== CÁMARAS ===== -->
+                <section data-section="cam" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-orange-600 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-video"></i> Cámaras</span>
+                        <span class="text-sm font-semibold" data-section-text="cam">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-orange-100 h-2"><div data-section-bar="cam" class="bg-orange-500 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="c-a1"><span class="text-sm text-slate-700">Radio cargado y audífonos puestos; probar comunicación con el operador en cabina</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a2"><span class="text-sm text-slate-700">Poner a cargar la Cámara 2 y la Power Bank</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a3"><span class="text-sm text-slate-700">Cámara 1: llevarla al centro del templo apuntando al altar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a4"><span class="text-sm text-slate-700">Cámara 1: conectar las 2 fuentes de energía (cámara y convertidor), quitar el protector del lente y encenderla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a5"><span class="text-sm text-slate-700">Cámara 1: presionar el obturador para quitar las letras de la pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a6"><span class="text-sm text-slate-700">Cámara 2: revisar batería, cable HDMI al transmisor y transmisor en la Power Bank con luz verde</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a7"><span class="text-sm text-slate-700">Receptor inalámbrico HDMI encendido, con el cargador conectado bajo el escritorio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a8"><span class="text-sm text-slate-700">Cámara Altar: toma general fija y los 2 cables cargadores conectados</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-a9"><span class="text-sm text-slate-700">Cámara Cabina: 2 cables bajo el escritorio conectados y encuadre ajustado</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="c-d1"><span class="text-sm text-slate-700">Apagar la Cámara 1, la Cámara del Altar, la Cámara de la Cabina y la Cámara 2</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d2"><span class="text-sm text-slate-700">Apagar el transmisor de la Cámara 2 y el receptor inalámbrico HDMI</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d3"><span class="text-sm text-slate-700">Poner el protector al lente de la Cámara 1</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d4"><span class="text-sm text-slate-700">poner los cobertores a las cámaras 1 y 2</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d5"><span class="text-sm text-slate-700">Desconectar los cables de las cámaras; Ubicar las cámaras en el lugar correspondiente</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="c-d6"><span class="text-sm text-slate-700">Notificar cualquier novedad o mejora que se pueda apolicar para el servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== SONIDO ===== -->
+                <section data-section="son" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-slate-800 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-sliders"></i> Sonido</span>
+                        <span class="text-sm font-semibold" data-section-text="son">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 h-2"><div data-section-bar="son" class="bg-slate-700 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="s-a1"><span class="text-sm text-slate-700">Encender la consola X32 y luego las plantas de potencia</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a2"><span class="text-sm text-slate-700">Conectar y encender el monitor de alabanza en el piso del altar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a3"><span class="text-sm text-slate-700">Conectar el micrófono del pastor (Receptor ubicado al lado de los instrumentos)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a4"><span class="text-sm text-slate-700">Revisar las micrófono del director</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a5"><span class="text-sm text-slate-700">Probar el sonido y el in-ear de cada miembro de la alabanza</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a6"><span class="text-sm text-slate-700">Revisar los grupos de muteo: 1 alabanza e instrumentos, 2 pastor, 3 dirección general, 4 sonido del PC</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a7"><span class="text-sm text-slate-700">Activar el sonido ambiente para aplausos y expresiones del público (cuando sea necesario)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a8"><span class="text-sm text-slate-700">Verificar que el cable USB al PC de transmisión esté conectado y llegue audio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-a9"><span class="text-sm text-slate-700">Revisar que el sonido esté saliendo de manera correcta en internet</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="s-d1"><span class="text-sm text-slate-700">Bajar los faders y mutear los canales antes de apagar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d2"><span class="text-sm text-slate-700">Apagar primero las plantas de potencia y después la consola</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d3"><span class="text-sm text-slate-700">Apagar los micrófonos</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d4"><span class="text-sm text-slate-700">Apagar y desconectar el monitor de alabanza y el receptor del micrófono del pastor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d5"><span class="text-sm text-slate-700">Revisar que los pianos y batería esten apagados y desconectados</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d6"><span class="text-sm text-slate-700">Cerrar y guardar los auriculares de la consola</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="s-d7"><span class="text-sm text-slate-700">Anotar fallas o mejoras de sonido para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== TEXTOS ===== -->
+                <section data-section="txt" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-amber-600 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-project-diagram"></i> Textos (Holyrics)</span>
+                        <span class="text-sm font-semibold" data-section-text="txt">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-amber-100 h-2"><div data-section-bar="txt" class="bg-amber-500 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="t-a1"><span class="text-sm text-slate-700">Holyrics abierto con la lista de canciones del culto cargada</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a2"><span class="text-sm text-slate-700">Canciones que falten: buscarlas y escribirlas en MAYÚSCULAS, máximo 4 líneas por diapositiva</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a3"><span class="text-sm text-slate-700">Plugin de textos activo (Herramientas > Plugins)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a4"><span class="text-sm text-slate-700">Mencionar la dirección IP al operador de vMix</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a5"><span class="text-sm text-slate-700">Biblia Reina Valera 1960 lista para la predicación</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a6"><span class="text-sm text-slate-700">Reproducir el audio del PC para ambiente antes de empezar el culto (Grupo de Muteo 4)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-a7"><span class="text-sm text-slate-700">Tener celular o google a la mano para buscar citas bíblicas</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="t-d1"><span class="text-sm text-slate-700">Cerrar Holyrics</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d2"><span class="text-sm text-slate-700">Apagar correctamente el PC de textos</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d3"><span class="text-sm text-slate-700">Anotar canciones nuevas o letras por corregir para el próximo servicio</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="t-d4"><span class="text-sm text-slate-700">Anotar fallas o mejoras de textos para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ===== TRANSMISIÓN ===== -->
+                <section data-section="trx" class="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                    <div class="bg-emerald-700 text-white px-6 py-3 font-bold text-xl flex items-center justify-between gap-2">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-satellite-dish"></i> Transmisión (vMix / ATEM)</span>
+                        <span class="text-sm font-semibold" data-section-text="trx">0 de 0 (0%)</span>
+                    </div>
+                    <div class="w-full bg-emerald-100 h-2"><div data-section-bar="trx" class="bg-emerald-600 h-2 transition-all" style="width:0%"></div></div>
+                    <div class="grid md:grid-cols-2 gap-6 p-5">
+                        <div>
+                            <h3 class="font-bold text-orange-700 mb-2"><i class="fa-regular fa-clock mr-2"></i>Antes</h3>
+                            <label class="check-item"><input type="checkbox" data-check="x-a1"><span class="text-sm text-slate-700">Encender los 3 interruptores de piso (largo blanco, cuadrado negro, cuadrado blanco)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a2"><span class="text-sm text-slate-700">Encender el PC de transmisión y su monitor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a3"><span class="text-sm text-slate-700">Encender la mac (Blackmagic) y su pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a4"><span class="text-sm text-slate-700">YouTube Studio: crear el evento en vivo con título y descripción del Bloc de notas</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a5"><span class="text-sm text-slate-700">YouTube Studio: cargar la miniatura del culto y copiar la clave de transmisión</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a6"><span class="text-sm text-slate-700">vMix: perfil Channel 2, pegar la clave de transmisión, guardar y cerrar</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a7"><span class="text-sm text-slate-700">vMix: actualizar la IP de textos con la que entregó Holyrics</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a8"><span class="text-sm text-slate-700">Probar el video de intro (tecla I) y el de cierre (tecla F)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a9"><span class="text-sm text-slate-700">iniciar grabación (Si aplica)</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-a10"><span class="text-sm text-slate-700">Iniciar la transmisión a las X:55 (5 min antes del culto) y verificar imagen y audio en YouTube Studio</span></label>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-700 mb-2"><i class="fa-solid fa-power-off mr-2"></i>Después</h3>
+                            <label class="check-item"><input type="checkbox" data-check="x-d1"><span class="text-sm text-slate-700">Lanzar el video de cierre (tecla F), finalizar grabación (Si aplica) y finalizar la transmisión en vMix cuando termine</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d2"><span class="text-sm text-slate-700">Confirmar en YouTube Studio que la transmisión terminó</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d3"><span class="text-sm text-slate-700">Cerrar el navegador</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d4"><span class="text-sm text-slate-700">Cerrar vMix</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d5"><span class="text-sm text-slate-700">Apagar correctamente el PC de transmisión y su monitor</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d6"><span class="text-sm text-slate-700">Apagar la mac (Blackmagic) y su pantalla</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d7"><span class="text-sm text-slate-700">Apagar los 3 interruptores de piso</span></label>
+                            <label class="check-item"><input type="checkbox" data-check="x-d8"><span class="text-sm text-slate-700">Anotar fallas o mejoras de transmisión para el próximo servicio</span></label>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        <!-- ================= PROBLEMAS ================= -->
+        <div id="problemas" class="tab-content">
+            <h2 class="text-3xl font-extrabold text-orange-800 mb-2 flex items-center gap-3"><i class="fa-solid fa-screwdriver-wrench text-orange-500"></i> Solución de Problemas</h2>
+            <p class="text-slate-600 mb-6">Regla general: avisa por radio, revisa lo más simple primero (cables, encendido, mute) y cambia <strong>una cosa a la vez</strong>.</p>
+
+            <div class="table-wrapper bg-white mb-8">
+                <table>
+                    <thead>
+                        <tr><th>Problema</th><th>Posibles causas</th><th>Qué revisar</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>No hay audio en YouTube</strong></td>
+                            <td>Cable USB, audio silenciado en vMix, enrutamiento de la X32.</td>
+                            <td>Cable USB conectado; entrada de audio y Master activos (sin mute) en vMix; medidor de audio moviéndose; salida USB asignada en la X32.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Los textos no aparecen en la transmisión</strong></td>
+                            <td>IP cambió, plugin desactivado, equipos en distinta red.</td>
+                            <td>Plugin activo en Holyrics (Herramientas > Plugins); copiar IP nuevamente y actualizarla en vMix; ambos PCs en la misma red.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Se oyen los videos del PC en la transmisión pero no en la sala (o al revés)</strong></td>
+                            <td>Grupo de muteo del PC en la posición equivocada.</td>
+                            <td>Grupo de Muteo 4 (sonido de PC Textos) activo; cable de audio del PC a la consola firme; canal del PC con nivel.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>No se escucha al pastor</strong></td>
+                            <td>Micrófono apagado o sin batería, Grupo 2 muteado, canal 7.</td>
+                            <td>Micrófono conectado y encendido; pilas; canal 7 sin mute y Grupo 2 activo; fader y ganancia del canal.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>La alabanza no escucha su monitor o in-ear</strong></td>
+                            <td>Monitor sin conectar, volumen bajo, in-ear sin señal.</td>
+                            <td>Monitor de alabanza conectado y encendido; envíos de monitor en la X32; batería y conexión del in-ear; repetir la prueba de sonido.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cámara 2 se congela o se pixela</strong></td>
+                            <td>Pérdida de señal inalámbrica, batería baja, interferencia.</td>
+                            <td>Luz verde del transmisor y Power Bank; línea de vista con el receptor (cargador conectado bajo el escritorio); cable HDMI firme; batería de la cámara.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Audio y video desfasados</strong></td>
+                            <td>Retardo de la Cámara 2 o del procesamiento.</td>
+                            <td>Aplicar retraso de audio (<em>Audio Delay</em>) en vMix hasta sincronizar con los labios.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>La transmisión se corta o se ve entrecortada</strong></td>
+                            <td>Poco ancho de banda de subida, Wi-Fi, CPU saturada.</td>
+                            <td>Cable de red conectado; otros dispositivos usando internet; uso de CPU en vMix; reiniciar el stream y revisar YouTube Studio.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Silbido / acople</strong></td>
+                            <td>Micrófono cerca de un parlante o monitor, ganancia o volumen muy alto.</td>
+                            <td>Bajar el fader del canal que acopla; alejar el micrófono; revisar la ecualización.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Micrófono inalámbrico no suena</strong></td>
+                            <td>Baterías, canal muteado, grupo de muteo activo.</td>
+                            <td>Pilas nuevas; micrófono encendido; canal y grupo de muteo en la X32; receptor con señal.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Se oye ruido o zumbido</strong></td>
+                            <td>Cable defectuoso o mal conectado, interferencia.</td>
+                            <td>Desconectar uno a uno para localizar el canal; cambiar el cable; separar cables de audio y de corriente.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pantallas del templo en negro</strong></td>
+                            <td>Splitter HDMI sin energía, cable suelto, salida del PC.</td>
+                            <td>Splitter encendido; cables HDMI de los TVs; salida de video del PC de transmisión.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Aparecen letras/avisos en la imagen de la Cámara 1</strong></td>
+                            <td>Información en pantalla (OSD) activada.</td>
+                            <td>Presionar el obturador para ocultarla.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>La Cámara 1 se ve negra</strong></td>
+                            <td>Protector del lente puesto, cámara apagada, falta de energía.</td>
+                            <td>Quitar el protector; que la cámara esté encendida; las 2 fuentes de energía (cámara y convertidor) conectadas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900 flex gap-3">
+                <i class="fa-solid fa-circle-info text-xl text-amber-500 flex-shrink-0"></i>
+                <p><strong>Importante:</strong> si un problema no se resuelve en un par de minutos, comunícalo al líder del equipo. Es mejor pedir ayuda a tiempo que arriesgar el servicio.</p>
+            </div>
+        </div>
+
         <div id="evaluacion" class="tab-content">
             <div class="max-w-3xl mx-auto">
                 <h2 class="text-3xl font-extrabold text-orange-800 mb-2 text-center">Evaluación de Conocimientos</h2>
@@ -434,11 +703,131 @@
 
     </main>
 
+    <!-- ================= POPUP SEMANAL ================= -->
+    <div id="weekly-modal" class="fixed inset-0 z-[100] items-center justify-center p-3 sm:p-6 bg-slate-900/60" role="dialog" aria-modal="true" aria-labelledby="weekly-title">
+        <div id="weekly-card" class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto border border-orange-100">
+
+            <div class="bg-gradient-to-r from-orange-600 to-orange-500 text-white px-5 sm:px-8 py-5 rounded-t-2xl relative">
+                <button onclick="closeWeekly()" id="weekly-close" aria-label="Cerrar" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <p class="text-xs sm:text-sm font-semibold uppercase tracking-wide text-orange-100"><i class="fa-solid fa-church mr-1"></i> MMM Boston Medellín</p>
+                <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight mt-1 pr-8">Comunicaciones</h2>
+                <p id="weekly-title" class="text-sm sm:text-lg font-semibold text-orange-50 mt-1"></p>
+            </div>
+
+            <div class="p-4 sm:p-8 space-y-6">
+
+                <section>
+                    <h3 class="text-lg sm:text-xl font-bold text-orange-800 mb-3"><i class="fa-solid fa-users-gear text-orange-500 mr-2"></i>Programación</h3>
+
+                    <!-- Escritorio / tablet: tabla -->
+                    <div id="weekly-table" class="hidden sm:block table-wrapper bg-white"></div>
+
+                    <!-- Celular: una tarjeta por día -->
+                    <div id="weekly-cards" class="sm:hidden grid gap-3"></div>
+                </section>
+
+                <section class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5">
+                    <h3 class="text-lg sm:text-xl font-bold text-amber-900 mb-3"><i class="fa-solid fa-circle-exclamation text-amber-500 mr-2"></i>Tener en cuenta</h3>
+                    <ul id="weekly-notes" class="space-y-3 text-slate-700"></ul>
+                </section>
+
+                <div class="flex justify-end">
+                    <button onclick="closeWeekly()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-0.5">
+                        Entendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="bg-slate-800 text-slate-400 py-6 text-center text-sm">
         <p>Equipo de Comunicaciones &copy; 2026. Diseñado para la excelencia.</p>
     </footer>
 
     <script>
+        // ================= POPUP SEMANAL =================
+        // Para actualizar la semana, solo edita este bloque de datos.
+        const semanaInfo = {
+            titulo: 'Programación semana del 19 al 22 de Octubre',
+            dias: ['Martes', 'Jueves', 'Domingo'],
+            roles: [
+                { rol: 'Transmisión', icono: 'fa-satellite-dish', personas: ['Yustin Murillo', 'Mirlan Palacios', 'Yustin Murillo'] },
+                { rol: 'Sonido',      icono: 'fa-sliders',        personas: ['Jose Rolon', 'Jeferson Rivas', 'Jeferson Rivas'] },
+                { rol: 'Textos',      icono: 'fa-project-diagram', personas: ['Roselis Perez', 'Robet Hoyos', 'Angelica Cárdenas'] },
+                { rol: 'Cámara',      icono: 'fa-video',          personas: ['Branyi', 'Juan Carlos Mena', 'Jose Rolon'] }
+            ],
+            notas: [
+                { icono: 'fa-video', texto: 'Reunión virtual próximo lunes 26 a las 8pm, tema: culto misionero.' },
+                { icono: 'fa-hand-holding-dollar', texto: 'Importante ponernos al día con el aporte mensual, la hna Maritza estará recolectando el aporte.' }
+            ]
+        };
+
+        let weeklyLastFocus = null;
+
+        function renderWeekly() {
+            document.getElementById('weekly-title').innerText = semanaInfo.titulo;
+
+            // Tabla (sm y superior)
+            let html = '<table><thead><tr><th>Rol</th>';
+            semanaInfo.dias.forEach(d => { html += `<th class="text-center">${d}</th>`; });
+            html += '</tr></thead><tbody>';
+            semanaInfo.roles.forEach(r => {
+                html += `<tr><td class="font-bold text-orange-800 whitespace-nowrap"><i class="fa-solid ${r.icono} text-orange-500 mr-2"></i>${r.rol}</td>`;
+                r.personas.forEach(p => { html += `<td class="text-center font-semibold text-slate-700">${p}</td>`; });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            document.getElementById('weekly-table').innerHTML = html;
+
+            // Tarjetas por día (celular)
+            let cards = '';
+            semanaInfo.dias.forEach((d, i) => {
+                cards += `<div class="bg-orange-50 border border-orange-200 rounded-xl overflow-hidden">
+                    <div class="bg-orange-100 text-orange-800 font-bold px-4 py-2">${d}</div>
+                    <ul class="divide-y divide-orange-100">`;
+                semanaInfo.roles.forEach(r => {
+                    cards += `<li class="flex items-center justify-between gap-3 px-4 py-2 text-sm">
+                        <span class="font-bold text-orange-800"><i class="fa-solid ${r.icono} text-orange-500 mr-2"></i>${r.rol}</span>
+                        <span class="font-semibold text-slate-700 text-right">${r.personas[i]}</span>
+                    </li>`;
+                });
+                cards += '</ul></div>';
+            });
+            document.getElementById('weekly-cards').innerHTML = cards;
+
+            // Tener en cuenta
+            let notes = '';
+            semanaInfo.notas.forEach(n => {
+                notes += `<li class="flex items-start gap-3"><i class="fa-solid ${n.icono} text-amber-500 mt-1"></i><span>${n.texto}</span></li>`;
+            });
+            document.getElementById('weekly-notes').innerHTML = notes;
+        }
+
+        function openWeekly() {
+            weeklyLastFocus = document.activeElement;
+            document.getElementById('weekly-modal').classList.add('open');
+            document.body.classList.add('overflow-hidden');
+            document.getElementById('weekly-close').focus();
+        }
+
+        function closeWeekly() {
+            document.getElementById('weekly-modal').classList.remove('open');
+            document.body.classList.remove('overflow-hidden');
+            if (weeklyLastFocus && weeklyLastFocus.focus) weeklyLastFocus.focus();
+        }
+
+        document.getElementById('weekly-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'weekly-modal') closeWeekly();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('weekly-modal').classList.contains('open')) closeWeekly();
+        });
+
+        renderWeekly();
+        openWeekly(); // se muestra automáticamente al abrir la página
+
         // Tab Navigation Logic
         function openTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -462,7 +851,53 @@
                 activeBtn.classList.remove('text-slate-500', 'border-transparent');
                 activeBtn.classList.add('active', 'text-orange-600', 'border-orange-500');
             }
+            activeBtn.scrollIntoView({ block: 'nearest', inline: 'center' });
         }
+
+        // Checklist con progreso guardado en el navegador
+        const STORAGE_KEY = 'comunicaciones-checklist-v3';
+        function loadChecks() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch (e) { return {}; }
+        }
+        function saveChecks(state) {
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) { /* sin almacenamiento disponible */ }
+        }
+        function updateChecklistProgress() {
+            const boxes = document.querySelectorAll('input[data-check]');
+            const done = [...boxes].filter(b => b.checked).length;
+            const pct = boxes.length ? Math.round((done / boxes.length) * 100) : 0;
+            document.getElementById('check-progress-text').innerText = `${done} de ${boxes.length} (${pct}%)`;
+            document.getElementById('check-progress-bar').style.width = pct + '%';
+
+            // Progreso por sección (cámaras, sonido, textos, transmisión)
+            document.querySelectorAll('[data-section]').forEach(sec => {
+                const id = sec.dataset.section;
+                const sb = sec.querySelectorAll('input[data-check]');
+                const sd = [...sb].filter(b => b.checked).length;
+                const sp = sb.length ? Math.round((sd / sb.length) * 100) : 0;
+                sec.querySelector(`[data-section-text="${id}"]`).innerText = `${sd} de ${sb.length} (${sp}%)`;
+                sec.querySelector(`[data-section-bar="${id}"]`).style.width = sp + '%';
+            });
+        }
+        function initChecklist() {
+            const state = loadChecks();
+            document.querySelectorAll('input[data-check]').forEach(box => {
+                box.checked = !!state[box.dataset.check];
+                box.addEventListener('change', () => {
+                    const s = loadChecks();
+                    s[box.dataset.check] = box.checked;
+                    saveChecks(s);
+                    updateChecklistProgress();
+                });
+            });
+            updateChecklistProgress();
+        }
+        function resetChecklist() {
+            document.querySelectorAll('input[data-check]').forEach(b => b.checked = false);
+            saveChecks({});
+            updateChecklistProgress();
+        }
+        initChecklist();
 
         const quizData = [
             { topic: "camaras", moduleName: "Cámaras", question: "¿Con cuánto tiempo de anticipación debes llegar para preparar los equipos?", options: ["15 minutos", "30 minutos", "1 hora", "2 horas"], answer: 2 },
