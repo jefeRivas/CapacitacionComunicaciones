@@ -58,6 +58,18 @@
         /* Fallback warning if CSS fails to load */
         .tailwind-warning { background-color: #ef4444; color: white; padding: 1rem; text-align: center; font-weight: bold; }
 
+        /* Problemas: en móvil cada fila se muestra como tarjeta (sin scroll lateral) */
+        @media (max-width: 639px) {
+            .problem-table, .problem-table tbody, .problem-table tr, .problem-table td { display: block; width: 100%; }
+            .problem-table thead { display: none; }
+            .problem-table tr + tr { border-top: 8px solid #fff7ed; }
+            .problem-table td { border-bottom: none; padding: 0.4rem 1rem; overflow-wrap: anywhere; }
+            .problem-table td::before { content: attr(data-label); display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: #c2410c; margin-bottom: 0.1rem; }
+            .problem-table td:first-child { background: #ffedd5; color: #9a3412; padding-top: 0.7rem; padding-bottom: 0.7rem; margin-bottom: 0.3rem; }
+            .problem-table td:first-child::before { display: none; }
+            .problem-table td:last-child { padding-bottom: 0.8rem; }
+        }
+
         @media print {
             header, footer, .no-print { display: none !important; }
             .tab-content { display: block !important; }
@@ -672,8 +684,13 @@
             <p class="text-slate-600 mb-4">Marca cada punto a medida que lo completas. Tu progreso se guarda en este navegador. <strong>Antes:</strong> domingos 1 hora antes, entre semana media hora antes.</p>
 
             <!-- Filtro por rol -->
-            <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4" id="check-filters">
+            <div class="hidden sm:flex gap-2 overflow-x-auto hide-scrollbar pb-2 mb-4" id="check-filters">
                 <span class="self-center text-sm font-bold text-slate-500 mr-1 whitespace-nowrap"><i class="fa-solid fa-filter mr-1"></i>Mostrar:</span>
+            </div>
+            <!-- Móvil: lista desplegable (evita deslizar de lado y cambiar de pestaña) -->
+            <div class="sm:hidden mb-4">
+                <label for="check-filter-select" class="block text-sm font-bold text-slate-500 mb-1"><i class="fa-solid fa-filter mr-1"></i>Mostrar:</label>
+                <select id="check-filter-select" class="w-full border-2 border-orange-200 bg-white text-orange-800 font-bold rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-400"></select>
             </div>
 
             <div class="bg-white rounded-xl border border-orange-100 shadow-sm p-4 mb-6">
@@ -699,33 +716,14 @@
             </div>
 
             <div class="table-wrapper bg-white mb-4">
-                <table>
+                <table class="problem-table">
                     <thead>
                         <tr><th>Problema</th><th>Posibles causas</th><th>Qué revisar</th></tr>
                     </thead>
-                    <tbody id="problem-rows">
-                        <tr><td><strong>No hay audio en YouTube / redes</strong></td><td>Entrada de audio desactualizada en vMix, Cable USB, audio silenciado en vMix, enrutamiento de la X32, tecla F presionada.</td><td>Buscar la entrada de audio en vMix y darle clic derecho y reset, Cable USB conectado; entrada de audio y Master activos (sin mute) en vMix; medidor de audio moviéndose; salida USB asignada en la X32.</td></tr>
-                        <tr><td><strong>Los textos no aparecen en la transmisión</strong></td><td>IP cambió, plugin desactivado, equipos en distinta red.</td><td>Plugin activo en Holyrics (Herramientas > Plugins); copiar IP nuevamente y actualizarla en vMix (clic derecho en la entrada); ambos PCs en la misma red.</td></tr>
-                        <tr><td><strong>Los textos salen tarde</strong></td><td>Delay de Holyrics, aviso tardío.</td><td>Da el clic o Enter justo antes de que se necesite el cambio; avisa a Transmisión oportunamente; ante una cita bíblica, búscala rápido.</td></tr>
-                        <tr><td><strong>La letra se ve desordenada o cortada</strong></td><td>Más de 4 renglones, minúsculas, signos al final.</td><td>Máximo 4 renglones (salvo cánticos especiales); todo en MAYÚSCULAS; sin puntos, comas ni espacios al final de cada renglón.</td></tr>
-                        <tr><td><strong>Se oyen los videos del PC en la transmisión pero no en la sala (o al revés)</strong></td><td>Grupo de muteo del PC en la posición equivocada.</td><td>Grupo de Muteo 4 (sonido de PC Textos) activo; cable de audio del PC a la consola firme; canal del PC con nivel.</td></tr>
-                        <tr><td><strong>No se escucha al pastor</strong></td><td>Micrófono apagado o sin batería, Grupo 2 muteado, canal 7.</td><td>Micrófono conectado y encendido (receptor al lado de los instrumentos); pilas; canal 7 sin mute y Grupo 2 activo; fader y ganancia del canal.</td></tr>
-                        <tr><td><strong>La alabanza no escucha su monitor o in-ear</strong></td><td>Monitor sin conectar, volumen bajo, in-ear sin señal.</td><td>Monitor de alabanza conectado y encendido; planta de monitores encendida; envíos de monitor en la X32; batería y conexión del in-ear; repetir la prueba de sonido.</td></tr>
-                        <tr><td><strong>Cámara 2 se congela o se pixela</strong></td><td>Pérdida de señal inalámbrica, batería baja, interferencia.</td><td>Luz verde del transmisor y Power Bank; línea de vista con el receptor (cargador conectado bajo el escritorio); cable HDMI firme; batería de la cámara.</td></tr>
-                        <tr><td><strong>Los camarógrafos no escuchan por radio</strong></td><td>Radio sin carga, audífonos mal conectados.</td><td>Radios puestos a cargar desde el inicio; audífonos conectados; prueba de comunicación antes de empezar.</td></tr>
-                        <tr><td><strong>Audio y video desfasados</strong></td><td>Retardo de la Cámara 2 o del procesamiento.</td><td>Aplicar retraso de audio (<em>Audio Delay</em>) en vMix hasta sincronizar con los labios.</td></tr>
-                        <tr><td><strong>La transmisión se corta o se ve entrecortada</strong></td><td>Poco ancho de banda de subida, Wi-Fi, CPU saturada.</td><td>Cable de red conectado; otros dispositivos usando internet; uso de CPU en vMix; reiniciar el stream y revisar YouTube Studio.</td></tr>
-                        <tr><td><strong>La transmisión no aparece en YouTube o Facebook</strong></td><td>Clave de transmisión incorrecta, evento no creado.</td><td>Evento creado en YouTube y Facebook; clave pegada en el perfil Channel 2 de vMix; stream iniciado.</td></tr>
-                        <tr><td><strong>Silbido / acople</strong></td><td>Micrófono cerca de un parlante o monitor, ganancia o volumen muy alto.</td><td>Bajar el fader del canal que acopla; alejar el micrófono; revisar la ecualización.</td></tr>
-                        <tr><td><strong>Micrófono inalámbrico no suena</strong></td><td>Baterías, canal muteado, grupo de muteo activo.</td><td>Pilas nuevas; micrófono encendido; canal y grupo de muteo en la X32; receptor con señal.</td></tr>
-                        <tr><td><strong>Se oye ruido o zumbido</strong></td><td>Cable defectuoso o mal conectado, interferencia.</td><td>Desconectar uno a uno para localizar el canal; cambiar el cable; separar cables de audio y de corriente.</td></tr>
-                        <tr><td><strong>Pantallas del templo en negro</strong></td><td>Splitter HDMI sin energía, televisores sin conectar, cable suelto, salida del PC.</td><td>Televisores del templo conectados; splitter encendido; cables HDMI de los TVs; salida de video del PC de transmisión.</td></tr>
-                        <tr><td><strong>Aparecen letras/avisos en la imagen de la Cámara 1</strong></td><td>Información en pantalla (OSD) activada.</td><td>Presionar el obturador para ocultarla.</td></tr>
-                        <tr><td><strong>La Cámara 1 se ve negra</strong></td><td>Protector del lente puesto, cámara apagada, falta de energía.</td><td>Quitar el protector; que la cámara esté encendida; las 2 fuentes de energía (cámara y convertidor) conectadas.</td></tr>
-                        <tr><td><strong>La imagen de una cámara se ve amarilla o azulada</strong></td><td>Balance de blancos.</td><td>Hacer el balance de blancos en las cámaras 1 y 2.</td></tr>
-                    </tbody>
+                    <tbody id="problem-rows"></tbody>
                 </table>
             </div>
+            <p id="problem-none" class="hidden text-center text-slate-500 py-4"><i class="fa-regular fa-face-meh mr-1"></i> Aún no hay problemas registrados.</p>
             <p id="problem-empty" class="hidden text-center text-slate-500 py-4"><i class="fa-regular fa-face-meh mr-1"></i> No encontramos ese problema. Avisa al líder del equipo.</p>
             <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 text-sm text-amber-900 flex gap-3">
                 <i class="fa-solid fa-circle-info text-xl text-amber-500 flex-shrink-0"></i>
@@ -848,9 +846,10 @@
             </div>
 
             <!-- Pestañas internas -->
-            <div class="flex border-b border-slate-200 bg-white px-4">
+            <div class="flex border-b border-slate-200 bg-white px-2 sm:px-4 overflow-x-auto hide-scrollbar">
                 <button id="admin-tab-prog" onclick="adminTab('prog')" class="px-4 py-3 text-sm font-bold border-b-4 border-orange-500 text-orange-600"><i class="fa-regular fa-calendar-days mr-1"></i> Programación</button>
                 <button id="admin-tab-equipo" onclick="adminTab('equipo')" class="px-4 py-3 text-sm font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-users mr-1"></i> Equipo</button>
+                <button id="admin-tab-problemas" onclick="adminTab('problemas')" class="px-4 py-3 text-sm font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600 whitespace-nowrap"><i class="fa-solid fa-screwdriver-wrench mr-1"></i> Problemas</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow space-y-6 bg-slate-50">
@@ -910,6 +909,20 @@
                     <button onclick="addMember()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-user-plus mr-2"></i> Agregar miembro</button>
                 </div>
               </div>
+
+              <!-- Pestaña Problemas -->
+              <div id="admin-pane-problemas" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+                        <h3 class="font-bold text-slate-700">Solución de problemas</h3>
+                        <button onclick="addProblema()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded hover:bg-orange-200 font-bold"><i class="fa-solid fa-plus mr-1"></i> Agregar problema</button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-3">Edita el texto de cada problema, agrega nuevos o elimina los que ya no apliquen. Los cambios se ven en la pestaña «Problemas» después de guardar.</p>
+                    <div id="cfg-problemas-container" class="space-y-3"></div>
+                    <p id="cfg-problemas-empty" class="hidden text-sm text-slate-500 text-center py-4">Aún no hay problemas. Agrega el primero.</p>
+                    <button onclick="addProblema()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-plus mr-2"></i> Agregar problema</button>
+                </div>
+              </div>
             </div>
 
             <div class="bg-white border-t border-slate-200 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
@@ -965,6 +978,126 @@
         // y las reglas de Firestore. Ya no hay ninguna clave escrita en este archivo.
         const STORAGE_KEY_SEMANA = 'comunicaciones-semana-config';
         const STORAGE_KEY_EQUIPO = 'comunicaciones-equipo-config';
+        const STORAGE_KEY_PROBLEMAS = 'comunicaciones-problemas-config';
+
+        // Lista de problemas (editable desde Configuración > Problemas). Estos son los valores iniciales.
+        const DEFAULT_PROBLEMAS = [
+    {
+        "id": "p1",
+        "problema": "No hay audio en YouTube / redes",
+        "causas": "Entrada de audio desactualizada en vMix, Cable USB, audio silenciado en vMix, enrutamiento de la X32, tecla F presionada.",
+        "revisar": "Buscar la entrada de audio en vMix y darle clic derecho y reset, Cable USB conectado; entrada de audio y Master activos (sin mute) en vMix; medidor de audio moviéndose; salida USB asignada en la X32."
+    },
+    {
+        "id": "p2",
+        "problema": "Los textos no aparecen en la transmisión",
+        "causas": "IP cambió, plugin desactivado, equipos en distinta red.",
+        "revisar": "Plugin activo en Holyrics (Herramientas > Plugins); copiar IP nuevamente y actualizarla en vMix (clic derecho en la entrada); ambos PCs en la misma red."
+    },
+    {
+        "id": "p3",
+        "problema": "Los textos salen tarde",
+        "causas": "Delay de Holyrics, aviso tardío.",
+        "revisar": "Da el clic o Enter justo antes de que se necesite el cambio; avisa a Transmisión oportunamente; ante una cita bíblica, búscala rápido."
+    },
+    {
+        "id": "p4",
+        "problema": "La letra se ve desordenada o cortada",
+        "causas": "Más de 4 renglones, minúsculas, signos al final.",
+        "revisar": "Máximo 4 renglones (salvo cánticos especiales); todo en MAYÚSCULAS; sin puntos, comas ni espacios al final de cada renglón."
+    },
+    {
+        "id": "p5",
+        "problema": "Se oyen los videos del PC en la transmisión pero no en la sala (o al revés)",
+        "causas": "Grupo de muteo del PC en la posición equivocada.",
+        "revisar": "Grupo de Muteo 4 (sonido de PC Textos) activo; cable de audio del PC a la consola firme; canal del PC con nivel."
+    },
+    {
+        "id": "p6",
+        "problema": "No se escucha al pastor",
+        "causas": "Micrófono apagado o sin batería, Grupo 2 muteado, canal 7.",
+        "revisar": "Micrófono conectado y encendido (receptor al lado de los instrumentos); pilas; canal 7 sin mute y Grupo 2 activo; fader y ganancia del canal."
+    },
+    {
+        "id": "p7",
+        "problema": "La alabanza no escucha su monitor o in-ear",
+        "causas": "Monitor sin conectar, volumen bajo, in-ear sin señal.",
+        "revisar": "Monitor de alabanza conectado y encendido; planta de monitores encendida; envíos de monitor en la X32; batería y conexión del in-ear; repetir la prueba de sonido."
+    },
+    {
+        "id": "p8",
+        "problema": "Cámara 2 se congela o se pixela",
+        "causas": "Pérdida de señal inalámbrica, batería baja, interferencia.",
+        "revisar": "Luz verde del transmisor y Power Bank; línea de vista con el receptor (cargador conectado bajo el escritorio); cable HDMI firme; batería de la cámara."
+    },
+    {
+        "id": "p9",
+        "problema": "Los camarógrafos no escuchan por radio",
+        "causas": "Radio sin carga, audífonos mal conectados.",
+        "revisar": "Radios puestos a cargar desde el inicio; audífonos conectados; prueba de comunicación antes de empezar."
+    },
+    {
+        "id": "p10",
+        "problema": "Audio y video desfasados",
+        "causas": "Retardo de la Cámara 2 o del procesamiento.",
+        "revisar": "Aplicar retraso de audio (Audio Delay) en vMix hasta sincronizar con los labios."
+    },
+    {
+        "id": "p11",
+        "problema": "La transmisión se corta o se ve entrecortada",
+        "causas": "Poco ancho de banda de subida, Wi-Fi, CPU saturada.",
+        "revisar": "Cable de red conectado; otros dispositivos usando internet; uso de CPU en vMix; reiniciar el stream y revisar YouTube Studio."
+    },
+    {
+        "id": "p12",
+        "problema": "La transmisión no aparece en YouTube o Facebook",
+        "causas": "Clave de transmisión incorrecta, evento no creado.",
+        "revisar": "Evento creado en YouTube y Facebook; clave pegada en el perfil Channel 2 de vMix; stream iniciado."
+    },
+    {
+        "id": "p13",
+        "problema": "Silbido / acople",
+        "causas": "Micrófono cerca de un parlante o monitor, ganancia o volumen muy alto.",
+        "revisar": "Bajar el fader del canal que acopla; alejar el micrófono; revisar la ecualización."
+    },
+    {
+        "id": "p14",
+        "problema": "Micrófono inalámbrico no suena",
+        "causas": "Baterías, canal muteado, grupo de muteo activo.",
+        "revisar": "Pilas nuevas; micrófono encendido; canal y grupo de muteo en la X32; receptor con señal."
+    },
+    {
+        "id": "p15",
+        "problema": "Se oye ruido o zumbido",
+        "causas": "Cable defectuoso o mal conectado, interferencia.",
+        "revisar": "Desconectar uno a uno para localizar el canal; cambiar el cable; separar cables de audio y de corriente."
+    },
+    {
+        "id": "p16",
+        "problema": "Pantallas del templo en negro",
+        "causas": "Splitter HDMI sin energía, televisores sin conectar, cable suelto, salida del PC.",
+        "revisar": "Televisores del templo conectados; splitter encendido; cables HDMI de los TVs; salida de video del PC de transmisión."
+    },
+    {
+        "id": "p17",
+        "problema": "Aparecen letras/avisos en la imagen de la Cámara 1",
+        "causas": "Información en pantalla (OSD) activada.",
+        "revisar": "Presionar el obturador para ocultarla."
+    },
+    {
+        "id": "p18",
+        "problema": "La Cámara 1 se ve negra",
+        "causas": "Protector del lente puesto, cámara apagada, falta de energía.",
+        "revisar": "Quitar el protector; que la cámara esté encendida; las 2 fuentes de energía (cámara y convertidor) conectadas."
+    },
+    {
+        "id": "p19",
+        "problema": "La imagen de una cámara se ve amarilla o azulada",
+        "causas": "Balance de blancos.",
+        "revisar": "Hacer el balance de blancos en las cámaras 1 y 2."
+    }
+];
+        let problemasInfo = JSON.parse(JSON.stringify(DEFAULT_PROBLEMAS));
 
         // Equipo inicial: personas que aparecen en la programación actual, con la habilidad del rol donde están asignadas hoy.
         // Ajusta habilidades y estado desde Configuración > Equipo.
@@ -1023,8 +1156,12 @@
 
                 const equipoRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'equipo');
                 onSnapshot(equipoRef, (snap) => {
-                    if (snap.exists() && Array.isArray(snap.data().miembros)) { equipoInfo = snap.data(); }
-                }, (error) => { console.error("Error escuchando equipo:", error); loadLocalData(); });
+                    if (snap.exists()) {
+                        const d = snap.data();
+                        if (Array.isArray(d.miembros)) equipoInfo = { miembros: d.miembros };
+                        if (Array.isArray(d.problemas)) { problemasInfo = d.problemas; renderProblemas(); }
+                    }
+                }, (error) => { console.error("Error escuchando equipo:", error); loadLocalData(); renderProblemas(); });
             } catch (e) {
                 console.error("Error Firebase:", e);
                 loadLocalData();
@@ -1039,7 +1176,10 @@
                 if (saved) semanaInfo = JSON.parse(saved);
                 const eq = localStorage.getItem(STORAGE_KEY_EQUIPO);
                 if (eq) equipoInfo = JSON.parse(eq);
+                const pr = localStorage.getItem(STORAGE_KEY_PROBLEMAS);
+                if (pr) { const arr = JSON.parse(pr); if (Array.isArray(arr)) problemasInfo = arr; }
             } catch (e) {}
+            renderProblemas();
         }
 
         function updateLogoutBtn() {
@@ -1089,13 +1229,23 @@
         window.openAdminModal = () => { populateAdminForm(); window.adminTab('prog'); updateLogoutBtn(); document.getElementById('admin-modal').classList.add('open'); document.body.classList.add('overflow-hidden'); };
         window.closeAdminModal = () => { document.getElementById('admin-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
         window.adminTab = (t) => {
-            const prog = t === 'prog';
-            document.getElementById('admin-pane-prog').classList.toggle('hidden', !prog);
-            document.getElementById('admin-pane-equipo').classList.toggle('hidden', prog);
             const on = ['border-orange-500', 'text-orange-600'], off = ['border-transparent', 'text-slate-500'];
-            const bp = document.getElementById('admin-tab-prog'), be = document.getElementById('admin-tab-equipo');
-            [bp, be].forEach(b => b.classList.remove(...on, ...off));
-            bp.classList.add(...(prog ? on : off)); be.classList.add(...(prog ? off : on));
+            ['prog', 'equipo', 'problemas'].forEach(n => {
+                document.getElementById('admin-pane-' + n).classList.toggle('hidden', n !== t);
+                const b = document.getElementById('admin-tab-' + n);
+                b.classList.remove(...on, ...off);
+                b.classList.add(...(n === t ? on : off));
+            });
+        };
+        window.addProblema = () => {
+            draftProblemas.push({ id: 'p' + Date.now().toString(36) + Math.floor(Math.random() * 1000), problema: '', causas: '', revisar: '' });
+            renderProblemasUI();
+            const inputs = document.querySelectorAll('#cfg-problemas-container .p-titulo');
+            if (inputs.length) {
+                const last = inputs[inputs.length - 1];
+                last.focus();
+                last.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
         };
         window.addMember = () => {
             draftEquipo.push({ id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1000), nombre: '', activo: true, skills: [] });
@@ -1352,6 +1502,7 @@
         // Estado temporal del panel (se confirma al guardar)
         let draftEquipo = [];   // copia editable de los miembros
         let draftSel = [];      // draftSel[rol][día] = '' | idMiembro | 'legacy:Nombre'
+        let draftProblemas = []; // copia editable de la lista de problemas
 
         const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const roleNames = () => semanaInfo.roles.map(r => r.rol);
@@ -1372,8 +1523,10 @@
                 return m ? m.id : 'legacy:' + name;
             }));
 
+            draftProblemas = JSON.parse(JSON.stringify(problemasInfo));
             renderEquipoUI();
             renderScheduleGrid();
+            renderProblemasUI();
 
             document.getElementById('cfg-notas-container').innerHTML = '';
             semanaInfo.notas.forEach((n, nIdx) => appendCfgNoteUI(n.texto, n.conIcono, nIdx));
@@ -1492,6 +1645,43 @@
             });
         }
 
+        // ---- Sección Problemas ----
+        function renderProblemasUI() {
+            const cont = document.getElementById('cfg-problemas-container');
+            document.getElementById('cfg-problemas-empty').classList.toggle('hidden', draftProblemas.length > 0);
+            const ta = 'w-full border border-slate-300 p-2 rounded text-base sm:text-sm focus:ring-1 focus:ring-orange-500 outline-none';
+            cont.innerHTML = draftProblemas.map((p, idx) => `
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2" data-p="${idx}">
+                    <div class="flex items-start gap-2">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Problema</label>
+                            <input type="text" value="${esc(p.problema)}" placeholder="Ej. No hay audio en YouTube" class="p-titulo ${ta} font-semibold bg-white">
+                        </div>
+                        <button class="p-del text-red-400 hover:text-red-600 p-2 mt-5" title="Eliminar problema"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Posibles causas</label>
+                        <textarea rows="3" class="p-causas ${ta} bg-white">${esc(p.causas)}</textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Qué revisar</label>
+                        <textarea rows="4" class="p-revisar ${ta} bg-white">${esc(p.revisar)}</textarea>
+                    </div>
+                </div>`).join('');
+
+            cont.querySelectorAll('[data-p]').forEach(card => {
+                const idx = +card.dataset.p, p = draftProblemas[idx];
+                card.querySelector('.p-titulo').addEventListener('input', e => { p.problema = e.target.value; });
+                card.querySelector('.p-causas').addEventListener('input', e => { p.causas = e.target.value; });
+                card.querySelector('.p-revisar').addEventListener('input', e => { p.revisar = e.target.value; });
+                card.querySelector('.p-del').addEventListener('click', () => {
+                    if (!confirm('¿Eliminar «' + (p.problema || 'este problema') + '» de la lista?')) return;
+                    draftProblemas.splice(idx, 1);
+                    renderProblemasUI();
+                });
+            });
+        }
+
         function appendCfgNoteUI(texto, conIcono, idx) {
             const container = document.getElementById('cfg-notas-container');
             const div = document.createElement('div');
@@ -1529,11 +1719,19 @@
                 const texto = row.querySelector('.cfg-note-text').value.trim();
                 if(texto) nuevaSemana.notas.push({ conIcono: row.querySelector('.cfg-note-icon').checked, texto });
             });
-            const nuevoEquipo = { miembros };
+            // --- Problemas: se descartan filas totalmente vacías ---
+            const problemas = draftProblemas
+                .map(p => ({ id: p.id, problema: (p.problema || '').trim(), causas: (p.causas || '').trim(), revisar: (p.revisar || '').trim() }))
+                .filter(p => p.problema || p.causas || p.revisar);
+            if (problemas.some(p => !p.problema)) { window.adminTab('problemas'); showAlert('Falta el título de un problema', 'Hay un problema sin título. Escríbelo o elimina esa tarjeta.', true); return; }
+
+            // Los problemas se guardan junto con el equipo (mismo documento), así no hace falta cambiar las reglas de Firestore
+            const nuevoEquipo = { miembros, problemas };
 
             const saveLocal = () => {
                 localStorage.setItem(STORAGE_KEY_SEMANA, JSON.stringify(nuevaSemana));
-                localStorage.setItem(STORAGE_KEY_EQUIPO, JSON.stringify(nuevoEquipo));
+                localStorage.setItem(STORAGE_KEY_EQUIPO, JSON.stringify({ miembros }));
+                localStorage.setItem(STORAGE_KEY_PROBLEMAS, JSON.stringify(problemas));
             };
 
             if (db && currentUser) {
@@ -1555,9 +1753,10 @@
                 saveLocal();
                 showAlert('Guardado Local', 'Sin base de datos, los cambios solo se guardaron en tu dispositivo.', true);
             }
-            semanaInfo = nuevaSemana; equipoInfo = nuevoEquipo;
+            semanaInfo = nuevaSemana; equipoInfo = { miembros }; problemasInfo = problemas;
             window.closeAdminModal();
             renderWeekly();
+            renderProblemas();
         }
 
         function showAlert(title, msg, isError = false) {
@@ -1588,9 +1787,21 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        let touchstartX = 0, touchstartY = 0, touchendX = 0, touchendY = 0;
-        document.getElementById('swipe-area').addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, { passive: true });
-        document.getElementById('swipe-area').addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; handleGesture(); }, { passive: true });
+        let touchstartX = 0, touchstartY = 0, touchendX = 0, touchendY = 0, swipeBlocked = false;
+        // Si el dedo empieza sobre algo que se desplaza de lado (tablas, listas) o un campo de texto, no se cambia de pestaña
+        function startsInsideHScroll(el) {
+            while (el && el !== document.body) {
+                if (el.nodeType === 1) {
+                    if (el.matches('input, textarea, select')) return true;
+                    const ox = getComputedStyle(el).overflowX;
+                    if ((ox === 'auto' || ox === 'scroll') && el.scrollWidth > el.clientWidth + 1) return true;
+                }
+                el = el.parentElement;
+            }
+            return false;
+        }
+        document.getElementById('swipe-area').addEventListener('touchstart', e => { swipeBlocked = startsInsideHScroll(e.target); touchstartX = e.changedTouches[0].screenX; touchstartY = e.changedTouches[0].screenY; }, { passive: true });
+        document.getElementById('swipe-area').addEventListener('touchend', e => { touchendX = e.changedTouches[0].screenX; touchendY = e.changedTouches[0].screenY; if (!swipeBlocked) handleGesture(); }, { passive: true });
 
         function handleGesture() {
             const diffX = touchendX - touchstartX, diffY = Math.abs(touchendY - touchstartY);
@@ -1603,17 +1814,26 @@
             }
         }
 
-        // ================= BUSCADOR DE PROBLEMAS =================
-        document.getElementById('problem-search').addEventListener('input', (e) => {
-            const q = e.target.value.trim().toLowerCase();
+        // ================= PROBLEMAS (render + buscador) =================
+        function renderProblemas() {
+            const body = document.getElementById('problem-rows');
+            body.innerHTML = problemasInfo.map(p => `<tr><td data-label="Problema"><strong>${esc(p.problema)}</strong></td><td data-label="Posibles causas">${esc(p.causas)}</td><td data-label="Qué revisar">${esc(p.revisar)}</td></tr>`).join('');
+            document.getElementById('problem-none').classList.toggle('hidden', problemasInfo.length > 0);
+            document.getElementById('problem-empty').classList.add('hidden');
+            filterProblemas();
+        }
+        function filterProblemas() {
+            const q = document.getElementById('problem-search').value.trim().toLowerCase();
             let visibles = 0;
             document.querySelectorAll('#problem-rows tr').forEach(tr => {
                 const show = !q || tr.innerText.toLowerCase().includes(q);
                 tr.style.display = show ? '' : 'none';
                 if (show) visibles++;
             });
-            document.getElementById('problem-empty').classList.toggle('hidden', visibles > 0);
-        });
+            document.getElementById('problem-empty').classList.toggle('hidden', visibles > 0 || problemasInfo.length === 0);
+        }
+        document.getElementById('problem-search').addEventListener('input', filterProblemas);
+        renderProblemas();
 
         // ================= CHECKLIST =================
         // Cada item: [id, texto]
@@ -1784,12 +2004,15 @@
             const filters = document.getElementById('check-filters');
             const mk = (id, label) => `<button class="chip ${id === 'all' ? 'on' : ''}" data-filter="${id}">${label}</button>`;
             filters.insertAdjacentHTML('beforeend', mk('all', 'Todos') + CHECK_DATA.map(s => mk(s.id, s.title.split(' ')[0])).join(''));
-            filters.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => {
-                filters.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-                chip.classList.add('on');
-                const f = chip.dataset.filter;
+            const fsel = document.getElementById('check-filter-select');
+            fsel.innerHTML = '<option value="all">Todos</option>' + CHECK_DATA.map(s => `<option value="${s.id}">${s.title}</option>`).join('');
+            const applyCheckFilter = (f) => {
+                filters.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.filter === f));
+                fsel.value = f;
                 document.querySelectorAll('[data-section]').forEach(sec => { sec.style.display = (f === 'all' || sec.dataset.section === f) ? '' : 'none'; });
-            }));
+            };
+            filters.querySelectorAll('.chip').forEach(chip => chip.addEventListener('click', () => applyCheckFilter(chip.dataset.filter)));
+            fsel.addEventListener('change', () => applyCheckFilter(fsel.value));
         }
 
         const STORAGE_KEY_CHECK = 'comunicaciones-checklist-v4';
