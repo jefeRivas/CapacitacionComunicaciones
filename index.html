@@ -865,6 +865,7 @@
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
                     <h3 class="font-bold text-slate-700 mb-1">Participantes por Día y Rol</h3>
                     <p class="text-xs text-slate-500 mb-3">Cada lista muestra solo a los miembros <strong>activos</strong> que tengan esa habilidad y que no estén asignados en otro rol el mismo día. Si no hay nadie, deja la opción vacía.</p>
+                    <div class="hidden sm:block">
                     <table class="w-full min-w-[600px] text-sm">
                         <thead>
                             <tr>
@@ -878,6 +879,9 @@
                             <!-- Generado dinámicamente -->
                         </tbody>
                     </table>
+                    </div>
+                    <!-- Vista móvil: una tarjeta por día, con los roles apilados en vertical -->
+                    <div id="cfg-roles-cards" class="sm:hidden space-y-4"></div>
                 </div>
 
                 <!-- Notas -->
@@ -902,6 +906,8 @@
                     <p class="text-xs text-slate-500 mb-3">Marca las habilidades de cada persona y si está activa. Los miembros inactivos no aparecen en las listas de la programación.</p>
                     <div id="cfg-equipo-container" class="space-y-3"></div>
                     <p id="cfg-equipo-empty" class="hidden text-sm text-slate-500 text-center py-4">Aún no hay miembros. Agrega el primero.</p>
+                    <!-- Solo móvil: botón al final de la lista para no tener que subir -->
+                    <button onclick="addMember()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-user-plus mr-2"></i> Agregar miembro</button>
                 </div>
               </div>
             </div>
@@ -1095,7 +1101,11 @@
             draftEquipo.push({ id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1000), nombre: '', activo: true, skills: [] });
             renderEquipoUI(); renderScheduleGrid();
             const inputs = document.querySelectorAll('#cfg-equipo-container input[type=text]');
-            if (inputs.length) inputs[inputs.length - 1].focus();
+            if (inputs.length) {
+                const last = inputs[inputs.length - 1];
+                last.focus();
+                last.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            }
         };
         window.closeAlert = () => document.getElementById('alert-modal').classList.remove('open');
         window.addCfgNote = () => appendCfgNoteUI('', true, document.querySelectorAll('.cfg-note-row').length);
@@ -1409,11 +1419,42 @@
                 tr.innerHTML = cells;
                 tbody.appendChild(tr);
             });
-            tbody.querySelectorAll('.cfg-select').forEach(sel => sel.addEventListener('change', () => {
+
+            // Vista móvil: una tarjeta por día con un selector por rol, apilados en vertical
+            const cards = document.getElementById('cfg-roles-cards');
+            let mhtml = '';
+            for (let i = 0; i < 3; i++) {
+                const dayVal = document.getElementById(`cfg-dia-${i}`).value;
+                mhtml += `<div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                    <div class="bg-orange-100 px-3 py-2 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar text-orange-600"></i>
+                        <input type="text" data-d="${i}" value="${esc(dayVal)}" placeholder="Día ${i + 1}" class="cfg-dia-m flex-1 min-w-0 border border-orange-200 bg-white p-2 rounded text-base font-bold text-orange-800 outline-none focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div class="p-3 space-y-3">`;
+                semanaInfo.roles.forEach((r, rIdx) => {
+                    mhtml += `<div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1"><i class="fa-solid ${r.icono} text-slate-400 mr-1"></i> ${esc(r.rol)}</label>
+                        <select data-r="${rIdx}" data-d="${i}" class="cfg-select w-full border border-slate-300 bg-white p-3 rounded-lg text-base focus:ring-2 focus:ring-orange-500 outline-none">${optionsFor(rIdx, i)}</select>
+                    </div>`;
+                });
+                mhtml += `</div></div>`;
+            }
+            cards.innerHTML = mhtml;
+
+            document.querySelectorAll('#admin-pane-prog .cfg-select').forEach(sel => sel.addEventListener('change', () => {
                 draftSel[+sel.dataset.r][+sel.dataset.d] = sel.value;
                 renderScheduleGrid();
             }));
         }
+
+        // Mantener sincronizados los nombres de día entre la vista PC (encabezado de tabla) y la vista móvil
+        document.getElementById('cfg-roles-cards').addEventListener('input', e => {
+            if (e.target.classList.contains('cfg-dia-m')) document.getElementById(`cfg-dia-${e.target.dataset.d}`).value = e.target.value;
+        });
+        [0, 1, 2].forEach(i => document.getElementById(`cfg-dia-${i}`).addEventListener('input', e => {
+            const m = document.querySelector(`.cfg-dia-m[data-d="${i}"]`);
+            if (m) m.value = e.target.value;
+        }));
 
         // ---- Sección Equipo ----
         function renderEquipoUI() {
