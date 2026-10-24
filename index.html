@@ -1249,6 +1249,7 @@
                     const lh = row.size + 8, startY = ry + row.h / 2 - ((show.length - 1) * lh) / 2 + row.size * 0.35;
                     show.forEach((l, li) => ctx.fillText(l, cx, startY + li * lh));
                 });
+                ry += row.h; // avanzar a la siguiente fila (antes todas se dibujaban en la misma posición)
             });
             ctx.restore();
             ctx.strokeStyle = '#fdba74'; ctx.lineWidth = 2; rrPath(ctx, tx, y, innerW, tableH, 24); ctx.stroke();
