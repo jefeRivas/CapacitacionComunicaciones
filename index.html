@@ -105,6 +105,10 @@
                     <button onclick="openPasswordPrompt()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-lg transition-colors shadow-sm" title="Configurar Programación">
                         <i class="fa-solid fa-gear mr-1"></i> Configurar
                     </button>
+                    <!-- Botón Aportes (solo administrador: pide inicio de sesión) -->
+                    <button onclick="openAportes()" class="flex-1 sm:flex-none text-xs sm:text-sm font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-3 py-2 rounded-lg transition-colors shadow-sm" title="Aportes mensuales">
+                        <i class="fa-solid fa-coins mr-1"></i> Aportes
+                    </button>
                 </div>
             </div>
         </div>
@@ -823,7 +827,7 @@
     <div id="password-modal" class="modal-overlay fixed inset-0 z-[120] items-center justify-center p-4 bg-slate-900/60" role="dialog">
         <form id="admin-login-form" class="modal-card bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm" onsubmit="return false;">
             <h3 class="font-bold text-xl text-slate-800 mb-2"><i class="fa-solid fa-lock text-slate-500 mr-2"></i> Acceso Admin</h3>
-            <p class="text-sm text-slate-600 mb-4">Inicia sesión con la cuenta de administrador para configurar la programación y el equipo.</p>
+            <p class="text-sm text-slate-600 mb-4">Inicia sesión con la cuenta de administrador para configurar la página y gestionar los aportes.</p>
             <input type="email" id="admin-email-input" autocomplete="username" class="w-full border border-slate-300 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Correo de administrador">
             <input type="password" id="admin-pass-input" autocomplete="current-password" class="w-full border border-slate-300 p-3 rounded-lg mb-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Contraseña">
             <p id="admin-pass-error" class="text-red-500 text-xs font-bold hidden mb-2"><i class="fa-solid fa-circle-xmark"></i> <span id="admin-pass-error-text">Correo o contraseña incorrectos.</span></p>
@@ -946,10 +950,155 @@
         <p>Equipo de Comunicaciones &copy; 2026. Diseñado para la excelencia.</p>
     </footer>
 
+    <!-- Modal: Aportes mensuales (solo administrador) -->
+    <div id="aportes-modal" class="modal-overlay fixed inset-0 z-[105] items-center justify-center p-2 sm:p-6 bg-slate-900/80" role="dialog">
+        <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[96vh] flex flex-col border border-orange-200">
+            <div class="bg-slate-800 text-white px-4 sm:px-6 py-3 rounded-t-2xl flex justify-between items-center">
+                <h2 class="text-lg sm:text-xl font-bold"><i class="fa-solid fa-coins text-orange-400 mr-2"></i> Aportes mensuales</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="logoutAdmin()" class="text-xs sm:text-sm font-bold text-slate-300 hover:text-white underline"><i class="fa-solid fa-right-from-bracket mr-1"></i>Cerrar sesión</button>
+                    <button onclick="closeAportes()" class="text-slate-300 hover:text-white transition-colors text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="flex border-b border-slate-200 bg-white px-1 sm:px-4">
+                <button id="ap-tab-reg" onclick="apTab('reg')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-orange-500 text-orange-600"><i class="fa-solid fa-hand-holding-dollar block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Registrar</button>
+                <button id="ap-tab-her" onclick="apTab('her')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-users block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Hermanos</button>
+                <button id="ap-tab-rep" onclick="apTab('rep')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-chart-column block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Reporte</button>
+                <button id="ap-tab-set" onclick="apTab('set')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-sliders block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Ajustes</button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3 sm:p-6 bg-slate-50">
+
+                <!-- Registrar -->
+                <div id="ap-pane-reg" class="space-y-4">
+                    <div id="ap-banner"></div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <label for="ap-sel" class="block text-xs font-bold text-slate-500 uppercase mb-1">Hermano</label>
+                        <select id="ap-sel" onchange="apOnSelect()" class="w-full border-2 border-orange-200 bg-white rounded-xl p-3 text-base font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></select>
+                        <div id="ap-resumen" class="mt-3"></div>
+                        <div id="ap-acciones" class="hidden mt-3">
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="apShowForm()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg text-sm"><i class="fa-solid fa-plus mr-1"></i> Agregar abono</button>
+                                <button onclick="apCertEstado()" class="bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 font-bold py-3 rounded-lg text-sm"><i class="fa-solid fa-file-invoice mr-1"></i> Generar certificado</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ap-form" class="hidden bg-white p-4 rounded-xl border-2 border-orange-300 shadow-sm space-y-3">
+                        <h3 class="font-bold text-slate-800"><i class="fa-solid fa-hand-holding-dollar text-orange-500 mr-1"></i> Nuevo abono</h3>
+                        <div>
+                            <label for="ap-monto" class="block text-xs font-bold text-slate-500 uppercase mb-1">Monto a abonar ($)</label>
+                            <input id="ap-monto" type="text" inputmode="numeric" autocomplete="off" placeholder="Ej. 30000" class="w-full border border-slate-300 bg-white p-3 rounded-lg text-lg font-bold focus:ring-2 focus:ring-orange-500 outline-none">
+                            <div id="ap-quick" class="flex gap-2 mt-2"></div>
+                        </div>
+                        <div>
+                            <label for="ap-recibe" class="block text-xs font-bold text-slate-500 uppercase mb-1">Recibió el abono</label>
+                            <select id="ap-recibe" class="w-full border border-slate-300 bg-white p-3 rounded-lg text-base focus:ring-2 focus:ring-orange-500 outline-none"></select>
+                        </div>
+                        <div id="ap-preview" class="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm text-slate-700 space-y-0.5"></div>
+                        <div class="flex gap-2">
+                            <button onclick="apHideForm()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg">Cancelar</button>
+                            <button id="ap-reg-btn" onclick="apRegistrar()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg"><i class="fa-solid fa-check mr-1"></i> Registrar y generar certificado</button>
+                        </div>
+                    </div>
+
+                    <div id="ap-hist-card" class="hidden bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 id="ap-hist-title" class="font-bold text-slate-700 mb-1">Movimientos</h3>
+                        <div id="ap-hist"></div>
+                    </div>
+                </div>
+
+                <!-- Hermanos -->
+                <div id="ap-pane-her" class="hidden">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-2">
+                            <h3 class="font-bold text-slate-700">Hermanos <span id="ap-her-count" class="text-sm font-normal text-slate-500 ml-1"></span></h3>
+                            <button onclick="apHerOpen()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded hover:bg-orange-200 font-bold"><i class="fa-solid fa-user-plus mr-1"></i> Agregar hermano</button>
+                        </div>
+                        <div id="ap-her-list"></div>
+                        <button onclick="apHerOpen()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-user-plus mr-2"></i> Agregar hermano</button>
+                    </div>
+                </div>
+
+                <!-- Reporte -->
+                <div id="ap-pane-rep" class="hidden space-y-3">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
+                            <div>
+                                <label for="ap-rep-year" class="block text-xs font-bold text-slate-500 uppercase mb-1">Año</label>
+                                <select id="ap-rep-year" onchange="apRenderReporte()" class="border-2 border-orange-200 bg-white rounded-lg p-2 text-base font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400"></select>
+                            </div>
+                            <div id="ap-rep-actions" class="flex flex-wrap gap-2">
+                                <button id="ap-rep-dl" onclick="apRepDownload()" class="bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 font-bold py-2 px-4 rounded-full text-sm"><i class="fa-solid fa-download mr-1"></i> Descargar imagen</button>
+                                <button id="ap-rep-sh" onclick="apRepShare()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full text-sm"><i class="fa-solid fa-share-nodes mr-1"></i> Compartir</button>
+                            </div>
+                        </div>
+                        <div id="ap-rep-table" class="rounded-lg border border-orange-100 overflow-hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Ajustes -->
+                <div id="ap-pane-set" class="hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-700 mb-1">Tarifa mensual</h3>
+                        <p class="text-xs text-slate-500 mb-3">Aplica solo a los abonos nuevos. Los meses ya pagados conservan su valor.</p>
+                        <div class="flex gap-2">
+                            <input id="ap-tarifa" type="text" inputmode="numeric" class="flex-1 min-w-0 border border-slate-300 bg-white p-3 rounded-lg text-base font-bold focus:ring-2 focus:ring-orange-500 outline-none">
+                            <button id="ap-tarifa-btn" onclick="apGuardarTarifa()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-5 rounded-lg">Guardar</button>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+                            <h3 class="font-bold text-slate-700">Quiénes reciben abonos</h3>
+                            <button onclick="apRecAdd()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded hover:bg-orange-200 font-bold"><i class="fa-solid fa-plus mr-1"></i> Agregar</button>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-3">Esta lista aparece al registrar un abono.</p>
+                        <div id="ap-rec-list" class="space-y-2"></div>
+                        <button id="ap-rec-btn" onclick="apGuardarRec()" class="w-full mt-3 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg">Guardar lista</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: agregar / editar hermano -->
+    <div id="ap-her-modal" class="modal-overlay fixed inset-0 z-[125] items-center justify-center p-4 bg-slate-900/60" role="dialog">
+        <div class="modal-card bg-white p-5 rounded-2xl shadow-xl w-full max-w-sm">
+            <h3 id="ap-her-title" class="font-bold text-lg text-slate-800 mb-3">Agregar hermano</h3>
+            <label for="ap-her-nombre" class="block text-xs font-bold text-slate-500 uppercase mb-1">Nombre</label>
+            <input id="ap-her-nombre" type="text" autocomplete="off" class="w-full border border-slate-300 bg-white p-3 rounded-lg text-base mb-3 focus:ring-2 focus:ring-orange-500 outline-none">
+            <label for="ap-her-inicio" class="block text-xs font-bold text-slate-500 uppercase mb-1">Empieza a aportar desde</label>
+            <select id="ap-her-inicio" class="w-full border border-slate-300 bg-white p-3 rounded-lg text-base focus:ring-2 focus:ring-orange-500 outline-none"></select>
+            <p class="text-xs text-slate-500 mt-1">Los meses anteriores no se le cobran.</p>
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="apHerClose()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg">Cancelar</button>
+                <button id="ap-her-save" onclick="apHerSave()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: certificado (descargar / compartir) -->
+    <div id="ap-cert-modal" class="modal-overlay fixed inset-0 z-[125] items-center justify-center p-3 bg-slate-900/80" role="dialog">
+        <div class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[96vh] flex flex-col">
+            <div class="px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                <h3 id="ap-cert-title" class="font-bold text-slate-800">Certificado</h3>
+                <button onclick="apCertClose()" class="text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-3 overflow-y-auto flex-1 bg-orange-50">
+                <p id="ap-cert-loading" class="text-center text-slate-500 py-10"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Generando certificado...</p>
+                <img id="ap-cert-img" class="hidden w-full rounded-lg shadow" alt="Certificado de aportes">
+            </div>
+            <div class="p-3 border-t border-slate-200 flex flex-wrap gap-2 justify-end">
+                <button onclick="apCertDownload()" class="bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 font-bold py-2 px-4 rounded-full text-sm"><i class="fa-solid fa-download mr-1"></i> Descargar</button>
+                <button id="ap-cert-share" onclick="apCertShare()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-full text-sm"><i class="fa-solid fa-share-nodes mr-1"></i> Compartir</button>
+                <button onclick="apCertClose()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full text-sm">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, onSnapshot, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ================= FIREBASE =================
         const MIS_CREDENCIALES_FIREBASE = {
@@ -1191,6 +1340,7 @@
         window.openWeekly = () => { document.getElementById('weekly-modal').classList.add('open'); document.body.classList.add('overflow-hidden'); };
         window.closeWeekly = () => { document.getElementById('weekly-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
         window.openPasswordPrompt = () => {
+            pendingAfterLogin = 'admin';
             // Si ya hay sesión iniciada (o no hay Firebase y se trabaja en local), entra directo
             if (currentUser || !auth || !db) { window.openAdminModal(); return; }
             document.getElementById('admin-pass-input').value = '';
@@ -1210,7 +1360,7 @@
                 errBox.classList.add('hidden');
                 document.getElementById('admin-pass-input').value = '';
                 window.closePasswordPrompt();
-                window.openAdminModal();
+                if (pendingAfterLogin === 'aportes') window.openAportes(); else window.openAdminModal();
             } catch (e) {
                 const msgs = {
                     'auth/invalid-credential': 'Correo o contraseña incorrectos.',
@@ -1225,7 +1375,7 @@
                 errBox.classList.remove('hidden');
             } finally { btn.disabled = false; btn.innerText = 'Ingresar'; }
         };
-        window.logoutAdmin = async () => { try { await signOut(auth); } catch (e) {} window.closeAdminModal(); };
+        window.logoutAdmin = async () => { try { await signOut(auth); } catch (e) {} window.closeAdminModal(); window.closeAportes(); apStop(); };
         window.openAdminModal = () => { populateAdminForm(); window.adminTab('prog'); updateLogoutBtn(); document.getElementById('admin-modal').classList.add('open'); document.body.classList.add('overflow-hidden'); };
         window.closeAdminModal = () => { document.getElementById('admin-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
         window.adminTab = (t) => {
@@ -1497,6 +1647,578 @@
             const probe = new File([new Blob(['x'])], 'p.png', { type: 'image/png' });
             if (navigator.canShare && navigator.canShare({ files: [probe] })) document.getElementById('weekly-share-btn').classList.remove('hidden');
         } catch (e) {}
+
+        // ================= MÓDULO DE APORTES (solo administrador) =================
+        // Datos iniciales tomados de Cuotas_comunicaciones.xlsx (aportes 2026)
+        const AP_INICIALES = [{"id":"h01","nombre":"Jeferson Rivas Murillo","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h02","nombre":"Miguel Julian Rodriguez Villamizar","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h03","nombre":"Jose Rolon","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h04","nombre":"Vanessa Cuesta","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h05","nombre":"Cristian Camilo Rivas Murillo","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h06","nombre":"Wilder Moreno","inicio":0,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h07","nombre":"Mirlan Palacio","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h08","nombre":"Maritza Sánchez Mena","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h09","nombre":"Sebastián Quintero López","inicio":0,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h10","nombre":"Andrés Cuervo","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000}],"saldo":10000},{"id":"h11","nombre":"Juan Carlos Mena","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h12","nombre":"Robert Hoyos","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h13","nombre":"Angélica Cárdenas","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h14","nombre":"Alfonso Gamez","inicio":0,"meses":[{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h15","nombre":"Paola Leon","inicio":0,"meses":[{"p":0,"t":0},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h16","nombre":"Samuel Quintero","inicio":0,"meses":[{"p":5000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h17","nombre":"Libardo Quiceno","inicio":0,"meses":[{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h18","nombre":"Sergio Quiceno","inicio":0,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h19","nombre":"Herry Moreno","inicio":0,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h20","nombre":"Jorge Ivan","inicio":3,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":10000,"t":10000},{"p":10000,"t":10000},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h21","nombre":"Yustin Murillo","inicio":8,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h22","nombre":"Samuel Colorado","inicio":8,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0},{"id":"h23","nombre":"Branyi Cataño","inicio":8,"meses":[{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0},{"p":0,"t":0}],"saldo":0}];
+
+        // ---- Cálculo (sin acceso a la base de datos) ----
+        const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        let aportesCfg = { tarifa: 10000, receptores: ['Maritza Sánchez', 'Jeferson Rivas'], consecutivo: 0 };
+
+        // Estado de un mes: 'na' (aún no le corresponde), 'pend' (sin pago), 'parcial' o 'ok'
+        function apMesEstado(h, i, tarifa) {
+            if (i < h.inicio) return 'na';
+            const m = h.meses[i] || { p: 0, t: 0 };
+            if (!m.p) return 'pend';
+            return m.p >= (m.t || tarifa) ? 'ok' : 'parcial';
+        }
+        function apUltimo(h, tarifa) {
+            for (let i = 11; i >= 0; i--) if (apMesEstado(h, i, tarifa) === 'ok') return i;
+            return -1;
+        }
+        function apTotal(h) { return (h.meses || []).reduce((s, m) => s + (m.p || 0), 0) + (h.saldo || 0); }
+
+        // Aplica un abono: sigue desde el mes siguiente al último pagado, completa meses a la tarifa y deja el resto como saldo
+        function apSimular(h, monto, tarifa) {
+            const meses = h.meses.map(m => ({ p: m.p || 0, t: m.t || 0 }));
+            let credito = (h.saldo || 0) + monto;
+            const antes = apUltimo(h, tarifa);
+            const aplic = [], cubiertos = [];
+            let m = Math.max(h.inicio, antes + 1);
+            while (m <= 11) {
+                const cur = meses[m];
+                const need = Math.max(0, tarifa - (cur.p || 0));
+                if (credito < need) break;
+                aplic.push({ m, pPrev: cur.p || 0, tPrev: cur.t || 0 });
+                cubiertos.push(m);
+                credito -= need;
+                cur.p = (cur.p || 0) + need;
+                cur.t = tarifa;
+                m++;
+            }
+            const tmp = { inicio: h.inicio, meses };
+            return { meses, saldo: credito, aplic, cubiertos, antes, despues: apUltimo(tmp, tarifa), saldoAntes: h.saldo || 0 };
+        }
+        const fmtMoney = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CO');
+        const joinEs = (arr) => arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1];
+
+        // ---- Datos en Firestore: colección "aportes" (documento "config" + un documento por año) ----
+        const AP_YEAR_INICIAL = 2026;
+        let aportesYears = {};
+        let aportesUnsub = null, aportesReady = false;
+        let apSel = '', apCertData = null, apCertUrl = null, apCertBlob = null, apHerEditId = null, apDraftRec = [];
+        let pendingAfterLogin = 'admin';
+        const apEl = (id) => document.getElementById(id);
+        const apYearNow = () => new Date().getFullYear();
+        const apBase = () => ['artifacts', appId, 'public', 'data', 'aportes'];
+        const apE = (msg) => { const e = new Error(msg); e.apMsg = msg; return e; };
+        const apSlug = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        const apNorm = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const apFechaTxt = (iso) => new Date(iso).toLocaleString('es-CO', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+        const apFechaCorta = (iso) => new Date(iso).toLocaleString('es-CO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', hour12: true });
+        const apParseMonto = (v) => parseInt(String(v || '').replace(/\D/g, ''), 10) || 0;
+        const apCur = () => aportesYears[String(apYearNow())] || null;
+        const apGet = (id) => { const y = apCur(); return y ? (y.hermanos || []).find(h => h.id === id) : null; };
+        const apYearsList = () => Object.keys(aportesYears).map(Number).filter(n => n > 0).sort((a, b) => b - a);
+        const apPrevYear = () => apYearsList().find(y => y < apYearNow() && (aportesYears[y].hermanos || []).length) || null;
+        const apSorted = (arr) => arr.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+        const apTarifa = () => aportesCfg.tarifa || 10000;
+
+        function apStart() {
+            if (aportesUnsub) return;
+            aportesUnsub = onSnapshot(collection(db, ...apBase()), (snap) => {
+                const years = {};
+                snap.forEach(d => {
+                    if (d.id === 'config') aportesCfg = Object.assign({ tarifa: 10000, receptores: ['Maritza Sánchez', 'Jeferson Rivas'], consecutivo: 0 }, d.data());
+                    else years[d.id] = d.data();
+                });
+                aportesYears = years; aportesReady = true;
+                apRender();
+            }, (err) => {
+                console.error('Aportes:', err);
+                aportesUnsub = null; aportesReady = false;
+                if (err && err.code === 'permission-denied') showAlert('Sin permiso para ver los aportes', 'Firebase no permite leer la colección «aportes». Agrega una regla de Firestore para la ruta artifacts/{appId}/public/data/aportes que permita leer y escribir solo a tu correo de administrador.', true);
+                else showAlert('No se pudieron cargar los aportes', 'Revisa tu conexión e inténtalo de nuevo.', true);
+                apRender();
+            });
+        }
+        function apStop() { if (aportesUnsub) { aportesUnsub(); aportesUnsub = null; } aportesReady = false; aportesYears = {}; }
+
+        // Transacción: lee el documento del año (y config), aplica los cambios y guarda. year = null → solo config.
+        async function apTx(year, fn) {
+            const cRef = doc(db, ...apBase(), 'config');
+            const yRef = year ? doc(db, ...apBase(), String(year)) : null;
+            return await runTransaction(db, async (tx) => {
+                const cs = await tx.get(cRef);
+                const ys = yRef ? await tx.get(yRef) : null;
+                const cfg = cs.exists() ? Object.assign({ tarifa: 10000, receptores: ['Maritza Sánchez', 'Jeferson Rivas'], consecutivo: 0 }, cs.data()) : { tarifa: 10000, receptores: ['Maritza Sánchez', 'Jeferson Rivas'], consecutivo: 0 };
+                const yd = yRef ? (ys.exists() ? ys.data() : { anio: year, hermanos: [], abonos: [] }) : null;
+                if (yd) { yd.hermanos = yd.hermanos || []; yd.abonos = yd.abonos || []; }
+                const res = fn(yd, cfg);
+                tx.set(cRef, cfg);
+                if (yRef) tx.set(yRef, yd);
+                return res;
+            });
+        }
+        function apErr(e, titulo) {
+            console.error(e);
+            if (e && e.apMsg) showAlert(titulo || 'No se pudo completar', e.apMsg, true);
+            else if (e && e.code === 'permission-denied') showAlert('Sin permiso para guardar', 'Tu sesión no tiene permiso de escritura en «aportes». Verifica que iniciaste sesión con la cuenta de administrador y que las reglas de Firestore incluyan la ruta de aportes.', true);
+            else showAlert(titulo || 'No se pudo guardar', 'Revisa tu conexión e inténtalo de nuevo.', true);
+        }
+        async function apBusy(btn, html, fn) {
+            const prev = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.innerHTML = html; }
+            try { await fn(); } finally { if (btn) { btn.disabled = false; btn.innerHTML = prev; } }
+        }
+        const apSpin = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Guardando...';
+
+        // ---- Abrir / cerrar el módulo (solo administrador) ----
+        function showLoginModal() {
+            apEl('admin-pass-input').value = '';
+            apEl('admin-pass-error').classList.add('hidden');
+            apEl('password-modal').classList.add('open');
+            apEl('admin-email-input').focus();
+        }
+        window.openAportes = () => {
+            if (!auth || !db) { showAlert('Módulo no disponible', 'El módulo de aportes necesita la conexión con Firebase y el inicio de sesión de administrador.', true); return; }
+            if (!(currentUser || auth.currentUser)) { pendingAfterLogin = 'aportes'; showLoginModal(); return; }
+            apStart();
+            window.apTab('reg');
+            apRender();
+            apEl('aportes-modal').classList.add('open');
+            document.body.classList.add('overflow-hidden');
+        };
+        window.closeAportes = () => { apEl('aportes-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); apHideForm(); };
+        window.apTab = (t) => {
+            const on = ['border-orange-500', 'text-orange-600'], off = ['border-transparent', 'text-slate-500'];
+            ['reg', 'her', 'rep', 'set'].forEach(n => {
+                apEl('ap-pane-' + n).classList.toggle('hidden', n !== t);
+                const b = apEl('ap-tab-' + n); b.classList.remove(...on, ...off); b.classList.add(...(n === t ? on : off));
+            });
+            if (t === 'set') apRenderSettings();
+            if (t === 'rep') apRenderReporte();
+        };
+
+        // ---- Pintar pantallas ----
+        function apRender() {
+            apRenderBanner(); apRenderSel(); apRenderResumen(); apRenderHist(); apRenderHermanos();
+            if (!apEl('ap-pane-rep').classList.contains('hidden')) apRenderReporte();
+            if (!apEl('ap-pane-set').classList.contains('hidden')) apRenderSettings();
+        }
+        function apRenderBanner() {
+            const c = apEl('ap-banner'), cur = apCur(), yn = apYearNow();
+            if (!aportesReady) { c.innerHTML = '<p class="text-sm text-slate-500 text-center py-2"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Cargando aportes...</p>'; return; }
+            if (cur) { c.innerHTML = ''; return; }
+            const prev = apPrevYear();
+            if (prev) {
+                c.innerHTML = `<div class="bg-amber-50 border border-amber-300 rounded-xl p-4"><p class="text-sm text-amber-900 mb-3"><strong>Ya empezó ${yn}.</strong> Al iniciar el año se copian los hermanos de ${prev}, el saldo a favor pasa al nuevo año y los meses pendientes de ${prev} no se cobran. El reporte de ${prev} sigue disponible en la pestaña Reporte.</p><button onclick="apIniciarAnio()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg">Iniciar año ${yn}</button></div>`;
+            } else {
+                c.innerHTML = `<div class="bg-amber-50 border border-amber-300 rounded-xl p-4"><p class="text-sm text-amber-900 mb-3"><strong>Aún no hay datos de aportes.</strong> Puedes cargar los aportes del Excel (año ${AP_YEAR_INICIAL}, 23 hermanos). Se hace una sola vez.</p><button onclick="apImportar()" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg">Importar datos iniciales</button></div>`;
+            }
+        }
+        function apRenderSel() {
+            const sel = apEl('ap-sel'), cur = apCur();
+            const list = cur ? apSorted(cur.hermanos) : [];
+            if (!list.some(h => h.id === apSel)) apSel = '';
+            sel.innerHTML = '<option value="">Selecciona un hermano...</option>' + list.map(h => `<option value="${esc(h.id)}">${esc(h.nombre)}</option>`).join('');
+            sel.value = apSel; sel.disabled = !cur;
+        }
+        window.apOnSelect = () => { apSel = apEl('ap-sel').value; apHideForm(); apRenderResumen(); apRenderHist(); };
+        function apRenderResumen() {
+            const box = apEl('ap-resumen'), acc = apEl('ap-acciones'), h = apGet(apSel), yn = apYearNow();
+            if (!h) { box.innerHTML = ''; acc.classList.add('hidden'); return; }
+            const u = apUltimo(h, apTarifa());
+            const parcial = h.meses.map((m, i) => apMesEstado(h, i, apTarifa()) === 'parcial' ? `${MESES[i]} (${fmtMoney(m.p)} de ${fmtMoney(m.t || apTarifa())})` : null).filter(Boolean);
+            const celda = (t, v, cls = 'text-slate-800') => `<div><div class="text-xs font-bold text-slate-500 uppercase">${t}</div><div class="text-lg font-extrabold ${cls} leading-tight">${v}</div></div>`;
+            box.innerHTML = `<div class="rounded-xl bg-orange-50 border border-orange-200 p-3 grid grid-cols-2 gap-3">
+                ${celda('Total aportado ' + yn, fmtMoney(apTotal(h)), 'text-orange-700')}
+                ${celda('Último mes pagado', u < 0 ? 'Ninguno' : MESES[u])}
+                ${h.saldo ? celda('Saldo a favor', fmtMoney(h.saldo), 'text-emerald-700') : ''}
+                ${celda('Empieza a aportar', MESES[h.inicio])}
+                ${parcial.length ? `<div class="col-span-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">Pago parcial pendiente de completar: ${esc(parcial.join(', '))}</div>` : ''}
+            </div>`;
+            acc.classList.remove('hidden');
+        }
+        function apRenderHist() {
+            const card = apEl('ap-hist-card'), cont = apEl('ap-hist'), cur = apCur();
+            if (!cur || !apSel) { card.classList.add('hidden'); return; }
+            const lista = (cur.abonos || []).filter(a => a.hid === apSel).slice().reverse();
+            if (!lista.length) { card.classList.add('hidden'); return; }
+            card.classList.remove('hidden');
+            const ultimoActivo = lista.find(a => a.tipo !== 'saldo' && !a.anulado);
+            apEl('ap-hist-title').textContent = 'Movimientos de ' + apYearNow();
+            cont.innerHTML = lista.map(a => {
+                if (a.tipo === 'saldo') return `<div class="py-3 border-b border-slate-100 last:border-0 text-sm text-slate-600"><i class="fa-solid fa-rotate mr-1 text-slate-400"></i> Saldo del año anterior aplicado: <strong>${fmtMoney(a.monto)}</strong> (${a.meses} ${a.meses === 1 ? 'mes' : 'meses'}) · ${apFechaCorta(a.fecha)}</div>`;
+                const hasta = a.despues >= 0 ? MESES[a.despues] : 'sin mes completo';
+                return `<div class="py-3 border-b border-slate-100 last:border-0 ${a.anulado ? 'opacity-60' : ''}">
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <span class="font-extrabold text-slate-800 ${a.anulado ? 'line-through' : ''}">${fmtMoney(a.monto)}</span>
+                        <span class="text-xs text-slate-500">N° ${String(a.n).padStart(4, '0')} · ${apFechaCorta(a.fecha)}</span>
+                    </div>
+                    <div class="text-sm text-slate-600">Llegó hasta <strong>${esc(hasta)}</strong> · Recibió ${esc(a.recibio)} ${a.anulado ? '<span class="ml-1 text-xs font-bold text-red-600">ANULADO</span>' : ''}</div>
+                    <div class="flex gap-2 mt-2">
+                        <button onclick="apVerCert('${a.id}')" class="text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 font-bold px-3 py-1.5 rounded"><i class="fa-solid fa-file-invoice mr-1"></i> Ver certificado</button>
+                        ${(!a.anulado && ultimoActivo && ultimoActivo.id === a.id) ? `<button onclick="apAnular('${a.id}')" class="text-xs bg-red-50 text-red-600 hover:bg-red-100 font-bold px-3 py-1.5 rounded"><i class="fa-solid fa-ban mr-1"></i> Anular</button>` : ''}
+                    </div></div>`;
+            }).join('');
+        }
+
+        // ---- Abono ----
+        window.apShowForm = () => {
+            const h = apGet(apSel); if (!h) return;
+            apEl('ap-monto').value = '';
+            const rs = apEl('ap-recibe');
+            rs.innerHTML = '<option value="">¿Quién recibió el abono?</option>' + (aportesCfg.receptores || []).map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join('');
+            const t = apTarifa();
+            apEl('ap-quick').innerHTML = [1, 2, 3].map(n => `<button type="button" onclick="apQuick(${n})" class="flex-1 bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 font-bold rounded-lg py-2 text-sm">${n} ${n === 1 ? 'mes' : 'meses'}<br><span class="text-xs font-semibold">${fmtMoney(t * n)}</span></button>`).join('');
+            apEl('ap-form').classList.remove('hidden');
+            apPreview();
+            apEl('ap-form').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        function apHideForm() { const f = apEl('ap-form'); if (f) f.classList.add('hidden'); }
+        window.apHideForm = apHideForm;
+        window.apQuick = (n) => { apEl('ap-monto').value = String(apTarifa() * n); apPreview(); };
+        window.apPreview = apPreview;
+        function apPreview() {
+            const h = apGet(apSel), box = apEl('ap-preview'), monto = apParseMonto(apEl('ap-monto').value);
+            if (!h || !monto) { box.innerHTML = '<span class="text-slate-400">Escribe el monto para ver cómo quedaría.</span>'; return; }
+            const s = apSimular(h, monto, apTarifa()), yn = apYearNow();
+            const txt = (i) => i < 0 ? 'sin aportes' : `${MESES[i]} ${yn}`;
+            box.innerHTML = `<div class="font-extrabold text-orange-700 text-lg">${fmtMoney(monto)}</div>
+                <div>Iba hasta: <strong>${txt(s.antes)}</strong></div>
+                <div>Llegaría hasta: <strong>${txt(s.despues)}</strong></div>
+                <div>Cubre: <strong>${s.cubiertos.length ? esc(joinEs(s.cubiertos.map(i => MESES[i]))) : 'ningún mes completo'}</strong></div>
+                ${s.saldo ? `<div class="text-emerald-700">Saldo a favor: <strong>${fmtMoney(s.saldo)}</strong></div>` : ''}`;
+        }
+        window.apRegistrar = async () => {
+            const h = apGet(apSel); if (!h) return;
+            const monto = apParseMonto(apEl('ap-monto').value), rec = apEl('ap-recibe').value;
+            if (!monto) { showAlert('Falta el monto', 'Escribe el valor del abono.', true); return; }
+            if (!rec) { showAlert('Falta quién recibió', 'Selecciona quién recibió el abono.', true); return; }
+            await apBusy(apEl('ap-reg-btn'), apSpin, async () => {
+                try {
+                    const yn = apYearNow();
+                    const ab = await apTx(yn, (yd, cfg) => {
+                        const hh = yd.hermanos.find(x => x.id === h.id);
+                        if (!hh) throw apE('No se encontró al hermano en la base de datos.');
+                        const sim = apSimular(hh, monto, cfg.tarifa || 10000);
+                        hh.meses = sim.meses; hh.saldo = sim.saldo;
+                        const n = (cfg.consecutivo || 0) + 1; cfg.consecutivo = n;
+                        const a = { id: 'a' + Date.now().toString(36), tipo: 'abono', n, hid: hh.id, nombre: hh.nombre, fecha: new Date().toISOString(), monto, recibio: rec, antes: sim.antes, despues: sim.despues, cubiertos: sim.cubiertos, aplic: sim.aplic, saldoAntes: sim.saldoAntes, saldoDespues: sim.saldo, totalDespues: apTotal(hh), anulado: false };
+                        yd.abonos.push(a);
+                        return a;
+                    });
+                    apHideForm();
+                    apShowCert(apCertDeAbono(ab, yn));
+                } catch (e) { apErr(e, 'No se pudo registrar el abono'); }
+            });
+        };
+        function apCertDeAbono(a, anio) {
+            return { tipo: 'abono', anio, n: a.n, nombre: a.nombre, fecha: a.fecha, monto: a.monto, antes: a.antes, despues: a.despues, cubiertos: a.cubiertos || [], saldo: a.saldoDespues || 0, total: a.totalDespues, recibio: a.recibio, anulado: !!a.anulado };
+        }
+        window.apVerCert = (id) => { const cur = apCur(); const a = cur && (cur.abonos || []).find(x => x.id === id); if (a) apShowCert(apCertDeAbono(a, apYearNow())); };
+        window.apCertEstado = () => {
+            const h = apGet(apSel); if (!h) return;
+            const u = apUltimo(h, apTarifa());
+            apShowCert({ tipo: 'estado', anio: apYearNow(), nombre: h.nombre, fecha: new Date().toISOString(), ultimo: u, saldo: h.saldo || 0, total: apTotal(h) });
+        };
+        window.apAnular = async (id) => {
+            if (!confirm('¿Anular este abono? Los meses y el saldo del hermano vuelven a como estaban antes. Esta acción queda registrada en el historial.')) return;
+            try {
+                await apTx(apYearNow(), (yd) => {
+                    const a = yd.abonos.find(x => x.id === id);
+                    if (!a || a.anulado) throw apE('Este abono ya no se puede anular.');
+                    const ult = yd.abonos.slice().reverse().find(x => x.hid === a.hid && x.tipo !== 'saldo' && !x.anulado);
+                    if (!ult || ult.id !== a.id) throw apE('Solo se puede anular el último abono de cada hermano.');
+                    const hh = yd.hermanos.find(x => x.id === a.hid);
+                    if (!hh) throw apE('No se encontró al hermano.');
+                    (a.aplic || []).forEach(ap => { hh.meses[ap.m] = { p: ap.pPrev, t: ap.tPrev }; });
+                    hh.saldo = a.saldoAntes || 0;
+                    a.anulado = true; a.anuladoFecha = new Date().toISOString();
+                });
+            } catch (e) { apErr(e, 'No se pudo anular'); }
+        };
+
+        // ---- Importar datos iniciales / iniciar año ----
+        window.apImportar = async () => {
+            if (!confirm('¿Importar los aportes del Excel (año ' + AP_YEAR_INICIAL + ')? Se hace una sola vez.')) return;
+            try {
+                await apTx(AP_YEAR_INICIAL, (yd) => {
+                    if (yd.hermanos.length) throw apE('Ya hay datos del año ' + AP_YEAR_INICIAL + '.');
+                    yd.anio = AP_YEAR_INICIAL; yd.hermanos = JSON.parse(JSON.stringify(AP_INICIALES)); yd.abonos = [];
+                });
+                showAlert('Datos importados', 'Se cargaron los aportes de ' + AP_INICIALES.length + ' hermanos.');
+            } catch (e) { apErr(e, 'No se pudo importar'); }
+        };
+        window.apIniciarAnio = async () => {
+            const yn = apYearNow(), py = apPrevYear(); if (!py) return;
+            if (!confirm('¿Iniciar el año ' + yn + '? Los saldos a favor pasan al nuevo año y los meses pendientes de ' + py + ' no se cobran.')) return;
+            const prev = aportesYears[py];
+            try {
+                await apTx(yn, (yd, cfg) => {
+                    if (yd.hermanos.length) throw apE('Este año ya está iniciado.');
+                    const t = cfg.tarifa || 10000, ahora = new Date().toISOString();
+                    yd.anio = yn; yd.abonos = [];
+                    yd.hermanos = prev.hermanos.map((h, i) => {
+                        let saldo = h.saldo || 0, m = 0, aplicado = 0;
+                        const meses = Array.from({ length: 12 }, () => ({ p: 0, t: 0 }));
+                        while (saldo >= t && m < 12) { meses[m] = { p: t, t }; saldo -= t; aplicado += t; m++; }
+                        if (aplicado) yd.abonos.push({ id: 's' + Date.now().toString(36) + i, tipo: 'saldo', hid: h.id, nombre: h.nombre, fecha: ahora, monto: aplicado, meses: m, anulado: false });
+                        return { id: h.id, nombre: h.nombre, inicio: 0, meses, saldo };
+                    });
+                });
+                showAlert('Año ' + yn + ' iniciado', 'Se copiaron los hermanos y se aplicaron los saldos a favor.');
+            } catch (e) { apErr(e, 'No se pudo iniciar el año'); }
+        };
+
+        // ---- Hermanos ----
+        function apRenderHermanos() {
+            const cont = apEl('ap-her-list'), cur = apCur();
+            apEl('ap-her-count').textContent = cur ? `${cur.hermanos.length} hermanos` : '';
+            if (!cur) { cont.innerHTML = '<p class="text-sm text-slate-500 text-center py-4">Primero inicia el año o importa los datos (pestaña Registrar).</p>'; return; }
+            cont.innerHTML = apSorted(cur.hermanos).map(h => {
+                const u = apUltimo(h, apTarifa());
+                return `<div class="flex items-center gap-2 py-3 border-b border-slate-100 last:border-0">
+                    <div class="flex-1 min-w-0"><div class="font-bold text-slate-800 truncate">${esc(h.nombre)}</div>
+                    <div class="text-xs text-slate-500">Empieza en ${MESES[h.inicio]} · Último pagado: ${u < 0 ? 'Ninguno' : MESES[u]}</div></div>
+                    <button onclick="apHerOpen('${h.id}')" class="text-slate-500 hover:text-orange-600 p-2" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                    <button onclick="apHerDel('${h.id}')" class="text-red-400 hover:text-red-600 p-2" title="Eliminar"><i class="fa-solid fa-trash"></i></button></div>`;
+            }).join('');
+        }
+        window.apHerOpen = (id) => {
+            if (!apCur()) { showAlert('Falta iniciar el año', 'Primero inicia el año o importa los datos en la pestaña Registrar.', true); return; }
+            apHerEditId = id || null;
+            const h = id ? apGet(id) : null;
+            apEl('ap-her-title').textContent = h ? 'Editar hermano' : 'Agregar hermano';
+            apEl('ap-her-nombre').value = h ? h.nombre : '';
+            apEl('ap-her-inicio').innerHTML = MESES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+            apEl('ap-her-inicio').value = String(h ? h.inicio : new Date().getMonth());
+            apEl('ap-her-modal').classList.add('open');
+            setTimeout(() => apEl('ap-her-nombre').focus(), 50);
+        };
+        window.apHerClose = () => apEl('ap-her-modal').classList.remove('open');
+        window.apHerSave = async () => {
+            const nombre = apEl('ap-her-nombre').value.trim().replace(/\s+/g, ' '), inicio = parseInt(apEl('ap-her-inicio').value, 10);
+            if (!nombre) { showAlert('Falta el nombre', 'Escribe el nombre del hermano.', true); return; }
+            await apBusy(apEl('ap-her-save'), apSpin, async () => {
+                try {
+                    await apTx(apYearNow(), (yd) => {
+                        if (yd.hermanos.some(h => h.id !== apHerEditId && apNorm(h.nombre) === apNorm(nombre))) throw apE('Ya existe un hermano con ese nombre.');
+                        if (apHerEditId) {
+                            const h = yd.hermanos.find(x => x.id === apHerEditId);
+                            if (!h) throw apE('No se encontró al hermano.');
+                            if (h.meses.some((m, i) => i < inicio && m.p > 0)) throw apE('Este hermano ya tiene aportes antes de ese mes. Elige un mes de inicio anterior.');
+                            h.nombre = nombre; h.inicio = inicio;
+                        } else {
+                            yd.hermanos.push({ id: 'h' + Date.now().toString(36), nombre, inicio, meses: Array.from({ length: 12 }, () => ({ p: 0, t: 0 })), saldo: 0 });
+                        }
+                    });
+                    window.apHerClose();
+                } catch (e) { apErr(e, 'No se pudo guardar el hermano'); }
+            });
+        };
+        window.apHerDel = async (id) => {
+            const h = apGet(id); if (!h) return;
+            if (!confirm('¿Eliminar a ' + h.nombre + '?')) return;
+            try {
+                await apTx(apYearNow(), (yd) => {
+                    const x = yd.hermanos.find(v => v.id === id); if (!x) return;
+                    if (apTotal(x) > 0 || yd.abonos.some(a => a.hid === id)) throw apE('Solo se pueden eliminar hermanos sin aportes ni movimientos registrados.');
+                    yd.hermanos = yd.hermanos.filter(v => v.id !== id);
+                });
+            } catch (e) { apErr(e, 'No se pudo eliminar'); }
+        };
+
+        // ---- Reporte general ----
+        function apRepData(y) {
+            const yd = aportesYears[String(y)]; if (!yd) return null;
+            const t = apTarifa();
+            const filas = apSorted(yd.hermanos).map(h => { const u = apUltimo(h, t); return { nombre: h.nombre, ultimo: u < 0 ? 'Ninguno' : MESES[u], total: apTotal(h) }; });
+            return { anio: y, filas, totalGeneral: filas.reduce((s, f) => s + f.total, 0), fecha: new Date().toISOString() };
+        }
+        function apRepYear() { return parseInt(apEl('ap-rep-year').value, 10) || apYearNow(); }
+        function apRenderReporte() {
+            const ys = apYearsList(); if (!ys.includes(apYearNow())) ys.unshift(apYearNow());
+            const sel = apEl('ap-rep-year'), prevVal = sel.value;
+            sel.innerHTML = ys.map(y => `<option value="${y}">${y}</option>`).join('');
+            sel.value = ys.map(String).includes(prevVal) ? prevVal : String(apYearNow());
+            const d = apRepData(apRepYear()), box = apEl('ap-rep-table');
+            apEl('ap-rep-actions').classList.toggle('hidden', !d);
+            if (!d) { box.innerHTML = '<p class="text-sm text-slate-500 text-center py-6">No hay datos de este año.</p>'; return; }
+            box.innerHTML = `<table class="w-full text-sm"><thead><tr class="bg-orange-100 text-orange-800 text-left"><th class="p-2 sm:p-3">Hermano</th><th class="p-2 sm:p-3">Último mes</th><th class="p-2 sm:p-3 text-right">Total ${d.anio}</th></tr></thead><tbody>
+                ${d.filas.map((f, i) => `<tr class="${i % 2 ? 'bg-orange-50/50' : ''}"><td class="p-2 sm:p-3 font-semibold text-slate-800">${esc(f.nombre)}</td><td class="p-2 sm:p-3 text-slate-600">${esc(f.ultimo)}</td><td class="p-2 sm:p-3 text-right font-bold text-slate-800">${fmtMoney(f.total)}</td></tr>`).join('')}
+                <tr class="bg-orange-100 font-extrabold text-orange-800"><td class="p-2 sm:p-3" colspan="2">Total general</td><td class="p-2 sm:p-3 text-right">${fmtMoney(d.totalGeneral)}</td></tr></tbody></table>`;
+        }
+        window.apRenderReporte = apRenderReporte;
+        window.apRepDownload = () => apBusy(apEl('ap-rep-dl'), '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generando...', async () => {
+            const d = apRepData(apRepYear()); if (!d) return;
+            try { const blob = await apBuildBlob(renderReportImage, d); triggerDownload(blob, `reporte-aportes-${d.anio}.png`); }
+            catch (e) { console.error(e); showAlert('No se pudo generar la imagen', 'Inténtalo de nuevo.', true); }
+        });
+        window.apRepShare = () => apBusy(apEl('ap-rep-sh'), '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Generando...', async () => {
+            const d = apRepData(apRepYear()); if (!d) return;
+            try { const blob = await apBuildBlob(renderReportImage, d); await apShareBlob(blob, `reporte-aportes-${d.anio}.png`, 'Reporte de aportes ' + d.anio); }
+            catch (e) { console.error(e); showAlert('No se pudo generar la imagen', 'Inténtalo de nuevo.', true); }
+        });
+
+        // ---- Ajustes: tarifa y quienes reciben ----
+        function apRenderSettings() {
+            apEl('ap-tarifa').value = String(apTarifa());
+            apDraftRec = (aportesCfg.receptores || []).slice();
+            apRenderRec();
+        }
+        function apRenderRec() {
+            const c = apEl('ap-rec-list');
+            c.innerHTML = apDraftRec.map((r, i) => `<div class="flex items-center gap-2"><input type="text" value="${esc(r)}" data-i="${i}" class="ap-rec-in flex-1 min-w-0 border border-slate-300 bg-white p-3 rounded-lg text-base focus:ring-2 focus:ring-orange-500 outline-none"><button onclick="apRecDel(${i})" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash"></i></button></div>`).join('');
+            c.querySelectorAll('.ap-rec-in').forEach(inp => inp.addEventListener('input', e => { apDraftRec[+e.target.dataset.i] = e.target.value; }));
+        }
+        window.apRecAdd = () => { apDraftRec.push(''); apRenderRec(); const ins = document.querySelectorAll('.ap-rec-in'); if (ins.length) ins[ins.length - 1].focus(); };
+        window.apRecDel = (i) => { apDraftRec.splice(i, 1); apRenderRec(); };
+        window.apGuardarRec = async () => {
+            const lista = []; apDraftRec.forEach(r => { const t = String(r).trim().replace(/\s+/g, ' '); if (t && !lista.some(x => apNorm(x) === apNorm(t))) lista.push(t); });
+            if (!lista.length) { showAlert('Falta al menos una persona', 'La lista de quienes reciben abonos no puede quedar vacía.', true); return; }
+            await apBusy(apEl('ap-rec-btn'), apSpin, async () => {
+                try { await apTx(null, (yd, cfg) => { cfg.receptores = lista; }); showAlert('Guardado', 'Lista de quienes reciben abonos actualizada.'); }
+                catch (e) { apErr(e); }
+            });
+        };
+        window.apGuardarTarifa = async () => {
+            const t = apParseMonto(apEl('ap-tarifa').value);
+            if (t < 1000) { showAlert('Tarifa no válida', 'Escribe la tarifa mensual en pesos (por ejemplo 10000).', true); return; }
+            await apBusy(apEl('ap-tarifa-btn'), apSpin, async () => {
+                try { await apTx(null, (yd, cfg) => { cfg.tarifa = t; }); showAlert('Tarifa actualizada', 'La nueva tarifa de ' + fmtMoney(t) + ' aplica a los abonos nuevos. Los meses ya pagados no cambian.'); }
+                catch (e) { apErr(e); }
+            });
+        };
+
+        // ---- Imágenes: certificado y reporte ----
+        function apFit(ctx, text, maxW) {
+            let t = String(text || '');
+            if (ctx.measureText(t).width <= maxW) return t;
+            while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+            return t + '…';
+        }
+        function apHeader(ctx, W, y, sub) {
+            const PAD = 40, innerW = W - PAD * 2, headH = 200;
+            const grad = ctx.createLinearGradient(PAD, 0, W - PAD, 0); grad.addColorStop(0, '#ea580c'); grad.addColorStop(1, '#f97316');
+            ctx.textAlign = 'left'; ctx.fillStyle = grad; rrPath(ctx, PAD, y, innerW, headH, 28); ctx.fill();
+            ctx.fillStyle = '#ffedd5'; ctx.font = `800 20px ${IMG_FONT}`; ctx.fillText('MMM BOSTON MEDELLÍN', PAD + 32, y + 52);
+            ctx.fillStyle = '#ffffff'; ctx.font = `800 54px ${IMG_FONT}`; ctx.fillText('Comunicaciones', PAD + 32, y + 112);
+            ctx.fillStyle = '#fff7ed'; ctx.font = `700 30px ${IMG_FONT}`; ctx.fillText(sub, PAD + 32, y + 160);
+            return y + headH + 28;
+        }
+        function apFooter(ctx, W, y) {
+            ctx.textAlign = 'center'; ctx.fillStyle = '#c2410c'; ctx.font = `700 20px ${IMG_FONT}`;
+            ctx.fillText('Equipo de Comunicaciones · Haciéndolo todo con excelencia', W / 2, y + 22);
+            ctx.textAlign = 'left';
+            return y + 22 + 40;
+        }
+        function renderCertImage(ctx, W, H, d) {
+            const PAD = 40, innerW = W - PAD * 2;
+            ctx.fillStyle = '#fff7ed'; ctx.fillRect(0, 0, W, H || 4000); ctx.textBaseline = 'alphabetic';
+            let y = apHeader(ctx, W, PAD, d.tipo === 'abono' ? `Comprobante de abono · N° ${String(d.n).padStart(4, '0')}` : 'Certificado de aportes');
+            const mes = (i) => i < 0 ? null : `${MESES[i]} ${d.anio}`;
+            const rows = [{ label: 'Hermano', value: d.nombre }];
+            if (d.tipo === 'abono') {
+                rows.push({ label: 'Valor abonado', value: fmtMoney(d.monto), big: true });
+                rows.push({ label: 'Iba al día hasta', value: mes(d.antes) || 'Sin meses pagados' });
+                rows.push({ label: 'Con este abono llegó hasta', value: mes(d.despues) || 'Aún sin un mes completo' });
+                rows.push({ label: 'Meses cubiertos', value: d.cubiertos.length ? joinEs(d.cubiertos.map(i => MESES[i])) : 'Ninguno (queda como saldo a favor)' });
+                if (d.saldo) rows.push({ label: 'Saldo a favor', value: fmtMoney(d.saldo) });
+                rows.push({ label: `Total aportado en ${d.anio}`, value: fmtMoney(d.total) });
+                rows.push({ label: 'Recibido por', value: d.recibio });
+            } else {
+                rows.push({ label: `Total aportado en ${d.anio}`, value: fmtMoney(d.total), big: true });
+                rows.push({ label: 'Último mes pagado', value: mes(d.ultimo) || 'Ninguno' });
+                if (d.saldo) rows.push({ label: 'Saldo a favor', value: fmtMoney(d.saldo) });
+            }
+            rows.push({ label: 'Fecha y hora', value: apFechaTxt(d.fecha) });
+            const LX = PAD + 40, maxW = innerW - 80;
+            const laid = rows.map(r => {
+                const fs = r.big ? 54 : 30, lh = r.big ? 62 : 40;
+                ctx.font = `800 ${fs}px ${IMG_FONT}`;
+                const lines = wrapLines(ctx, r.value, maxW);
+                return Object.assign({}, r, { fs, lh, lines, h: 28 + (r.big ? 58 : 40) + (lines.length - 1) * lh + 24 });
+            });
+            const cardH = 24 + laid.reduce((s, r) => s + r.h, 0) + 8;
+            ctx.fillStyle = '#ffffff'; rrPath(ctx, PAD, y, innerW, cardH, 28); ctx.fill();
+            ctx.strokeStyle = '#fdba74'; ctx.lineWidth = 2; ctx.stroke();
+            let ry = y + 24;
+            laid.forEach((r, i) => {
+                if (i > 0) { ctx.strokeStyle = '#ffedd5'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(LX, ry); ctx.lineTo(W - PAD - 40, ry); ctx.stroke(); }
+                ctx.fillStyle = '#c2410c'; ctx.font = `800 18px ${IMG_FONT}`; ctx.fillText(r.label.toUpperCase(), LX, ry + 28);
+                ctx.fillStyle = r.big ? '#ea580c' : '#334155'; ctx.font = `800 ${r.fs}px ${IMG_FONT}`;
+                r.lines.forEach((l, li) => ctx.fillText(l, LX, ry + 28 + (r.big ? 58 : 40) + li * r.lh));
+                ry += r.h;
+            });
+            y += cardH + 36;
+            if (d.anulado) {
+                ctx.save(); ctx.translate(W / 2, y - cardH / 2); ctx.rotate(-0.25); ctx.globalAlpha = 0.28; ctx.fillStyle = '#dc2626'; ctx.textAlign = 'center'; ctx.font = `800 140px ${IMG_FONT}`; ctx.fillText('ANULADO', 0, 40); ctx.restore();
+            }
+            return apFooter(ctx, W, y);
+        }
+        function renderReportImage(ctx, W, H, d) {
+            const PAD = 40, innerW = W - PAD * 2;
+            ctx.fillStyle = '#fff7ed'; ctx.fillRect(0, 0, W, H || 6000); ctx.textBaseline = 'alphabetic';
+            let y = apHeader(ctx, W, PAD, `Reporte general de aportes ${d.anio}`);
+            const rowH = 60, headRow = 56, totalH = headRow + d.filas.length * rowH + 70;
+            ctx.fillStyle = '#ffffff'; rrPath(ctx, PAD, y, innerW, totalH, 24); ctx.fill();
+            ctx.strokeStyle = '#fdba74'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.save(); rrPath(ctx, PAD, y, innerW, totalH, 24); ctx.clip();
+            const X1 = PAD + 28, X2 = PAD + innerW * 0.56, X3 = W - PAD - 28;
+            ctx.fillStyle = '#ffedd5'; ctx.fillRect(PAD, y, innerW, headRow);
+            ctx.fillStyle = '#c2410c'; ctx.font = `800 20px ${IMG_FONT}`; ctx.textAlign = 'left';
+            ctx.fillText('HERMANO', X1, y + 36); ctx.fillText('ÚLTIMO MES', X2, y + 36);
+            ctx.textAlign = 'right'; ctx.fillText('TOTAL ' + d.anio, X3, y + 36);
+            let ry = y + headRow;
+            d.filas.forEach((f, i) => {
+                if (i % 2) { ctx.fillStyle = '#fff7ed'; ctx.fillRect(PAD, ry, innerW, rowH); }
+                ctx.textAlign = 'left'; ctx.fillStyle = '#1e293b'; ctx.font = `700 25px ${IMG_FONT}`;
+                ctx.fillText(apFit(ctx, f.nombre, X2 - X1 - 16), X1, ry + 39);
+                ctx.fillStyle = '#475569'; ctx.font = `600 25px ${IMG_FONT}`; ctx.fillText(f.ultimo, X2, ry + 39);
+                ctx.textAlign = 'right'; ctx.fillStyle = '#1e293b'; ctx.font = `800 25px ${IMG_FONT}`; ctx.fillText(fmtMoney(f.total), X3, ry + 39);
+                ry += rowH;
+            });
+            ctx.fillStyle = '#fed7aa'; ctx.fillRect(PAD, ry, innerW, 70);
+            ctx.fillStyle = '#9a3412'; ctx.font = `800 28px ${IMG_FONT}`; ctx.textAlign = 'left'; ctx.fillText('TOTAL GENERAL', X1, ry + 45);
+            ctx.textAlign = 'right'; ctx.fillText(fmtMoney(d.totalGeneral), X3, ry + 45);
+            ctx.restore();
+            y += totalH + 30;
+            ctx.textAlign = 'center'; ctx.fillStyle = '#9a3412'; ctx.font = `600 20px ${IMG_FONT}`; ctx.fillText('Generado el ' + apFechaTxt(d.fecha), W / 2, y + 10);
+            return apFooter(ctx, W, y + 20);
+        }
+        async function apBuildBlob(renderFn, data) {
+            try { await Promise.all([document.fonts.load('700 24px Nunito'), document.fonts.load('800 24px Nunito'), document.fonts.load('600 24px Nunito')]); } catch (e) {}
+            const W = 1080, S = 2;
+            const H = renderFn(document.createElement('canvas').getContext('2d'), W, 0, data);
+            const c = document.createElement('canvas'); c.width = W * S; c.height = Math.ceil(H * S);
+            const ctx = c.getContext('2d'); ctx.scale(S, S);
+            renderFn(ctx, W, H, data);
+            return await new Promise(res => c.toBlob(res, 'image/png'));
+        }
+        async function apShareBlob(blob, name, title) {
+            try { await navigator.share({ files: [new File([blob], name, { type: 'image/png' })], title }); }
+            catch (e) { if (e && e.name !== 'AbortError') triggerDownload(blob, name); }
+        }
+
+        // ---- Ventana del certificado ----
+        function apCertFileName() {
+            const d = apCertData, f = new Date(d.fecha), p = (n) => String(n).padStart(2, '0');
+            return `${d.tipo === 'abono' ? 'abono' : 'certificado'}-${apSlug(d.nombre)}-${f.getFullYear()}${p(f.getMonth() + 1)}${p(f.getDate())}.png`;
+        }
+        async function apShowCert(d) {
+            apCertData = d; apCertBlob = null;
+            apEl('ap-cert-title').textContent = d.tipo === 'abono' ? 'Abono registrado' : 'Certificado de aportes';
+            apEl('ap-cert-img').classList.add('hidden'); apEl('ap-cert-loading').classList.remove('hidden');
+            apEl('ap-cert-modal').classList.add('open'); document.body.classList.add('overflow-hidden');
+            try {
+                apCertBlob = await apBuildBlob(renderCertImage, d);
+                if (apCertUrl) URL.revokeObjectURL(apCertUrl);
+                apCertUrl = URL.createObjectURL(apCertBlob);
+                apEl('ap-cert-img').src = apCertUrl;
+                apEl('ap-cert-img').classList.remove('hidden'); apEl('ap-cert-loading').classList.add('hidden');
+            } catch (e) { console.error(e); apEl('ap-cert-loading').textContent = 'No se pudo generar el certificado. Cierra e inténtalo de nuevo.'; }
+        }
+        window.apCertClose = () => { apEl('ap-cert-modal').classList.remove('open'); };
+        window.apCertDownload = () => { if (apCertBlob) triggerDownload(apCertBlob, apCertFileName()); };
+        window.apCertShare = () => { if (apCertBlob) apShareBlob(apCertBlob, apCertFileName(), 'Aportes · ' + apCertData.nombre); };
+        try {
+            const probe = new File([new Blob(['x'])], 'p.png', { type: 'image/png' });
+            if (navigator.canShare && navigator.canShare({ files: [probe] })) { apEl('ap-cert-share').classList.remove('hidden'); apEl('ap-rep-sh').classList.remove('hidden'); }
+        } catch (e) {}
+        apEl('ap-monto').addEventListener('input', apPreview);
 
         // ================= PANEL ADMIN =================
         // Estado temporal del panel (se confirma al guardar)
