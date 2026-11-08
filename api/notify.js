@@ -1,6 +1,9 @@
 // POST /api/notify — Envía una notificación a todos los dispositivos registrados.
 // Solo funciona con la sesión del administrador (correo incluido en ADMIN_EMAILS).
+//   · { titulo }                        → "Programación actualizada"
+//   · { tipo: 'evento', evento: {...} } → aviso manual de un evento (botón en Configurar → Eventos)
 const g = require('./_lib/google');
+const rec = require('./recordatorios');
 
 const limpiar = (s, max) => String(s || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max);
 
@@ -17,13 +20,23 @@ module.exports = async (req, res) => {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
     body = body || {};
-    const titulo = limpiar(body.titulo, 80);
-    const aviso = {
-      title: '📅 Programación actualizada',
-      body: titulo ? `${titulo}. Toca para ver quién sirve esta semana.` : 'Hay cambios en la programación. Toca para ver quién sirve esta semana.',
-      url: '/?programacion=1',
-      tag: 'programacion'
-    };
+    let aviso;
+    if (body.tipo === 'evento') {
+      const ev = body.evento || {};
+      const e = { id: limpiar(ev.id, 60).replace(/[^A-Za-z0-9_-]/g, '') || 'manual', titulo: limpiar(ev.titulo, 80), fecha: limpiar(ev.fecha, 10), hora: limpiar(ev.hora, 5), descripcion: limpiar(ev.descripcion, 300) };
+      const t = rec.inicioEvento(e), ahora = Date.now();
+      if (!e.titulo || !Number.isFinite(t)) { res.statusCode = 400; return res.json({ error: 'El evento necesita nombre, fecha y hora.' }); }
+      if (t <= ahora) { res.statusCode = 400; return res.json({ error: 'Este evento ya empezó o ya pasó.' }); }
+      aviso = rec.armarAviso(e, t - ahora <= 60 * 60 * 1000 ? '1h' : '24h', t, ahora);
+    } else {
+      const titulo = limpiar(body.titulo, 80);
+      aviso = {
+        title: '📅 Programación actualizada',
+        body: titulo ? `${titulo}. Toca para ver quién sirve esta semana.` : 'Hay cambios en la programación. Toca para ver quién sirve esta semana.',
+        url: '/?programacion=1',
+        tag: 'programacion'
+      };
+    }
 
     const sa = g.leerCuentaServicio();
     const at = await g.tokenDeAcceso(sa);

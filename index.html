@@ -2790,6 +2790,7 @@
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Detalles (opcional)</label>
                         <textarea rows="2" maxlength="300" placeholder="Lugar, qué llevar, etc." class="ev-desc ${inp}">${esc(e.descripcion)}</textarea>
                     </div>
+                    ${pushVapid && !pasado ? `<button type="button" class="ev-enviar w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg border-2 border-orange-300 bg-white text-orange-700 hover:bg-orange-50 font-bold text-sm transition-colors"><i class="fa-solid fa-paper-plane"></i> Enviar notificación ahora</button>` : ''}
                 </div>`; }).join('');
             cont.querySelectorAll('[data-ev]').forEach(card => {
                 const idx = +card.dataset.ev, e = draftEventos[idx];
@@ -2797,6 +2798,8 @@
                 card.querySelector('.ev-fecha').addEventListener('input', ev => { e.fecha = ev.target.value; });
                 card.querySelector('.ev-hora').addEventListener('input', ev => { e.hora = ev.target.value; });
                 card.querySelector('.ev-desc').addEventListener('input', ev => { e.descripcion = ev.target.value; });
+                const btnEnviar = card.querySelector('.ev-enviar');
+                if (btnEnviar) btnEnviar.addEventListener('click', () => enviarAvisoEvento(e, btnEnviar));
                 card.querySelector('.ev-del').addEventListener('click', () => {
                     if (!confirm('¿Eliminar el evento «' + (e.titulo || 'sin nombre') + '»?')) return;
                     draftEventos.splice(idx, 1);
@@ -3439,6 +3442,45 @@
                 else extra('⚠️ No se pudo enviar el aviso: ' + (j.error || ('error ' + r.status)));
             } catch (e) { console.warn('Aviso no enviado', e); extra('⚠️ No se pudo enviar el aviso (sin conexión con el servidor).'); }
         }
+        // Aviso manual de un evento (botón "Enviar notificación ahora" en Configurar → Eventos)
+        async function enviarAvisoEvento(e, btn) {
+            const ev = { id: e.id, titulo: (e.titulo || '').trim(), fecha: e.fecha || '', hora: e.hora || '', descripcion: (e.descripcion || '').trim() };
+            const t = inicioEvento(ev);
+            if (!ev.titulo || !Number.isFinite(t)) { showAlert('Falta información', 'Para enviar la notificación, el evento necesita nombre, fecha y hora.', true); return; }
+            if (t <= Date.now()) { showAlert('Evento pasado', 'Este evento ya empezó o ya pasó; no se envía la notificación.', true); return; }
+            if (!confirm('¿Enviar ahora una notificación del evento «' + ev.titulo + '» a todo el equipo?')) return;
+            const u = auth && auth.currentUser;
+            if (!u) { showAlert('Sesión requerida', 'Inicia sesión como administrador para enviar notificaciones.', true); return; }
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando…';
+            try {
+                const r = await fetch('/api/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await u.getIdToken() },
+                    body: JSON.stringify({ tipo: 'evento', evento: ev })
+                });
+                const j = await r.json().catch(() => ({}));
+                const guardado = (semanaInfo.eventos || []).some(x => x.id === ev.id && stable({ titulo: x.titulo, fecha: x.fecha, hora: x.hora, descripcion: x.descripcion || '' }) === stable({ titulo: ev.titulo, fecha: ev.fecha, hora: ev.hora, descripcion: ev.descripcion }));
+                const nota = guardado ? '' : '\n\nRecuerda tocar «Guardar Cambios» para que el equipo también vea el evento en la app.';
+                if (r.ok) showAlert('Notificación enviada', (j.enviados ? `🔔 Se envió el aviso de «${ev.titulo}» a ${j.enviados} dispositivo(s).` : '🔔 Aún no hay dispositivos con las notificaciones activadas.') + nota);
+                else showAlert('No se pudo enviar', j.error || ('Error ' + r.status), true);
+            } catch (err) {
+                showAlert('No se pudo enviar', 'Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.', true);
+            } finally { btn.disabled = false; btn.innerHTML = original; }
+        }
+
+        // Respaldo de los recordatorios automáticos: cada vez que alguien abre la app (como mucho cada 5 minutos por
+        // dispositivo) se pide al servidor que envíe los recordatorios pendientes. Es seguro: nunca se envían dos veces.
+        const REVISION_KEY = 'recordatorios_ultima_revision';
+        function revisarRecordatorios() {
+            if (!pushVapid || document.visibilityState === 'hidden') return;
+            let ultima = 0; try { ultima = +localStorage.getItem(REVISION_KEY) || 0; } catch (e) {}
+            if (Date.now() - ultima < 5 * 60 * 1000) return;
+            try { localStorage.setItem(REVISION_KEY, String(Date.now())); } catch (e) {}
+            fetch('/api/recordatorios', { method: 'POST', keepalive: true }).catch(() => {});
+        }
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisarRecordatorios(); });
+
         async function iniciarNotificaciones() {
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
             try {
@@ -3446,6 +3488,7 @@
                 if (r.ok) pushVapid = String(((await r.json()) || {}).vapidKey || '');
             } catch (e) { pushVapid = ''; }
             pintarBotonNotif();
+            revisarRecordatorios();
             // Si ya estaban activadas, se renueva el registro en silencio (los tokens pueden cambiar con el tiempo)
             if (pushVapid && db && pushActivo()) pushRegistrar().then(pintarBotonNotif).catch(e => console.warn('No se renovó el registro de avisos', e));
         }

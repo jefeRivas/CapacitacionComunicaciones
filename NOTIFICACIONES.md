@@ -201,6 +201,23 @@ Abre en el navegador tu dirección de Vercel agregando `/api/push-config` al fin
      Si cambias la fecha u hora de un evento, se programan los recordatorios de la nueva hora.
    - Guardar solo cambios de eventos **no** envía el aviso de "Programación actualizada".
 
+### Enviar la notificación de un evento manualmente
+
+En **Configurar** → **Eventos**, cada evento próximo tiene el botón **"Enviar notificación ahora"**.
+Pide confirmación y envía el aviso a todo el equipo en ese momento (el texto se adapta: "El sábado…", "Hoy a las…"
+o "Empieza en 30 minutos"). No afecta los recordatorios automáticos. Si el evento todavía no está guardado,
+la app te recuerda tocar **Guardar Cambios** para que el equipo también lo vea.
+
+### Respaldo: revisión al abrir la app
+
+GitHub no garantiza que sus tareas programadas se ejecuten a tiempo (a veces se retrasan mucho o no se ejecutan).
+Por eso, además, cada vez que alguien abre la app (como mucho una vez cada 5 minutos por dispositivo) se piden
+los recordatorios pendientes. Nunca se envían dos veces.
+
+Para que los recordatorios sean puntuales aunque nadie abra la app, se recomienda un reloj externo gratuito
+como [cron-job.org](https://cron-job.org): una tarea cada 5 minutos, método **POST**, a la dirección
+`https://capacitacioncomunicaciones.vercel.app/api/recordatorios`.
+
 ### Ver o probar los recordatorios en GitHub
 
 - En el repositorio → pestaña **Actions** → **Recordatorios de eventos** se ve cada ejecución (✅ o ❌).
