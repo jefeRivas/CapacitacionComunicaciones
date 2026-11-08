@@ -1,0 +1,32 @@
+# Revisa cada 10 minutos si hay eventos que necesiten recordatorio (24 h y 1 h antes)
+# y le pide a la app en Vercel que envíe las notificaciones.
+# GitHub puede retrasar unos minutos las tareas programadas; por eso los recordatorios
+# tienen un margen (ver api/recordatorios.js).
+# Para usar otra dirección, crea la variable APP_URL en Settings → Secrets and variables → Actions → Variables.
+name: Recordatorios de eventos
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: recordatorios
+  cancel-in-progress: false
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Enviar recordatorios pendientes
+        env:
+          APP_URL: ${{ vars.APP_URL || 'https://capacitacioncomunicaciones.vercel.app' }}
+        run: |
+          respuesta=$(curl -sS --retry 3 --retry-delay 10 --retry-all-errors -m 60 -X POST -w '\n%{http_code}' "$APP_URL/api/recordatorios")
+          codigo=$(echo "$respuesta" | tail -n1)
+          echo "$respuesta" | sed '$d'
+          echo "HTTP $codigo"
+          test "$codigo" = "200"

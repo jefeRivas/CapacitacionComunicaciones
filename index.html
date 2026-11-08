@@ -898,6 +898,10 @@
                     <div id="weekly-table" class="hidden sm:block table-wrapper bg-white"></div>
                     <div id="weekly-cards" class="sm:hidden grid gap-3"></div>
                 </section>
+                <section class="hidden" id="weekly-eventos-container">
+                    <h3 class="text-lg sm:text-xl font-bold text-orange-800 mb-3"><i class="fa-solid fa-calendar-check text-orange-500 mr-2"></i>Eventos</h3>
+                    <ul id="weekly-eventos" class="grid gap-3"></ul>
+                </section>
                 <section class="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5" id="weekly-notes-container">
                     <h3 class="text-lg sm:text-xl font-bold text-amber-900 mb-3"><i class="fa-solid fa-circle-exclamation text-amber-500 mr-2"></i>Tener en cuenta</h3>
                     <ul id="weekly-notes" class="space-y-3 text-slate-700"></ul>
@@ -950,6 +954,7 @@
                 <button id="admin-tab-prog" onclick="adminTab('prog')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-orange-500 text-orange-600"><i class="fa-regular fa-calendar-days block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Programación</button>
                 <button id="admin-tab-equipo" onclick="adminTab('equipo')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-users block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Equipo</button>
                 <button id="admin-tab-problemas" onclick="adminTab('problemas')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-screwdriver-wrench block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Problemas</button>
+                <button id="admin-tab-eventos" onclick="adminTab('eventos')" class="flex-1 sm:flex-none min-w-0 px-1 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-center font-bold border-b-4 border-transparent text-slate-500 hover:text-orange-600"><i class="fa-solid fa-calendar-check block sm:inline mb-0.5 sm:mb-0 sm:mr-1"></i> Eventos</button>
             </div>
 
             <div class="p-6 overflow-y-auto flex-grow space-y-6 bg-slate-50">
@@ -1011,6 +1016,20 @@
               </div>
 
               <!-- Pestaña Problemas -->
+              <!-- Pestaña Eventos -->
+              <div id="admin-pane-eventos" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
+                        <h3 class="font-bold text-slate-700">Eventos</h3>
+                        <button onclick="addEvento()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded hover:bg-orange-200 font-bold"><i class="fa-solid fa-plus mr-1"></i> Agregar evento</button>
+                    </div>
+                    <p class="text-xs text-slate-500 mb-3">Reuniones, tiempos de oración u otras actividades con fecha y hora (hora de Colombia). Se muestran al equipo después de la programación y quienes tengan los avisos activados reciben una notificación <strong>24 horas antes</strong> y otra <strong>1 hora antes</strong>. Los eventos pasados se ocultan solos.</p>
+                    <div id="cfg-eventos-container" class="space-y-3"></div>
+                    <p id="cfg-eventos-empty" class="hidden text-sm text-slate-500 text-center py-4">No hay eventos. Agrega el primero.</p>
+                    <button onclick="addEvento()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-plus mr-2"></i> Agregar evento</button>
+                </div>
+              </div>
+
               <div id="admin-pane-problemas" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <div class="flex flex-wrap justify-between items-center gap-2 mb-1">
@@ -1555,7 +1574,7 @@
         window.closeAdminModal = () => { document.getElementById('admin-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
         window.adminTab = (t) => {
             const on = ['border-orange-500', 'text-orange-600'], off = ['border-transparent', 'text-slate-500'];
-            ['prog', 'equipo', 'problemas'].forEach(n => {
+            ['prog', 'equipo', 'problemas', 'eventos'].forEach(n => {
                 document.getElementById('admin-pane-' + n).classList.toggle('hidden', n !== t);
                 const b = document.getElementById('admin-tab-' + n);
                 b.classList.remove(...on, ...off);
@@ -1597,6 +1616,24 @@
         // Cerrar modales clicando afuera
         document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if(e.target === m) { m.classList.remove('open'); document.body.classList.remove('overflow-hidden'); } }));
 
+        // ================= EVENTOS (fecha y hora de Colombia) =================
+        const EVENTOS_ZONA_OFFSET = '-05:00', EVENTOS_ZONA = 'America/Bogota';
+        const EVENTO_VISIBLE_MS = 3 * 3600 * 1000;   // un evento se sigue mostrando hasta 3 horas después de empezar
+        function inicioEvento(e) {
+            if (!e || !/^\d{4}-\d{2}-\d{2}$/.test(e.fecha || '') || !/^\d{2}:\d{2}$/.test(e.hora || '')) return NaN;
+            return Date.parse(`${e.fecha}T${e.hora}:00${EVENTOS_ZONA_OFFSET}`);
+        }
+        const fmtEvento = (ms, op) => new Intl.DateTimeFormat('es-CO', { timeZone: EVENTOS_ZONA, ...op }).format(new Date(ms));
+        const eventoDia = (ms) => { const t = fmtEvento(ms, { weekday: 'long', day: 'numeric', month: 'long' }); return t.charAt(0).toUpperCase() + t.slice(1); };
+        const eventoHora = (ms) => fmtEvento(ms, { hour: 'numeric', minute: '2-digit', hour12: true }).replace(/\s+/g, ' ');
+        function eventosProximos() {
+            const ahora = Date.now();
+            return (semanaInfo.eventos || [])
+                .map(e => ({ ...e, t: inicioEvento(e) }))
+                .filter(e => Number.isFinite(e.t) && String(e.titulo || '').trim() && e.t + EVENTO_VISIBLE_MS > ahora)
+                .sort((a, b) => a.t - b.t);
+        }
+
         // ================= LÓGICA DE INTERFAZ SEMANAL =================
         function renderWeekly() {
             document.getElementById('weekly-title').innerText = semanaInfo.titulo;
@@ -1621,6 +1658,23 @@
                 cards += '</ul></div>';
             });
             document.getElementById('weekly-cards').innerHTML = cards;
+
+            const eventos = eventosProximos();
+            document.getElementById('weekly-eventos-container').classList.toggle('hidden', eventos.length === 0);
+            const hoyCO = fmtEvento(Date.now(), { year: 'numeric', month: '2-digit', day: '2-digit' });
+            document.getElementById('weekly-eventos').innerHTML = eventos.map(e => {
+                const esHoy = fmtEvento(e.t, { year: 'numeric', month: '2-digit', day: '2-digit' }) === hoyCO;
+                return `<li class="flex items-start gap-3 bg-white border border-orange-200 rounded-xl p-3 sm:p-4">
+                    <div class="shrink-0 w-14 text-center rounded-lg bg-orange-100 text-orange-800 py-1.5">
+                        <div class="text-[11px] font-bold uppercase leading-none">${esc(fmtEvento(e.t, { month: 'short' }).replace('.', ''))}</div>
+                        <div class="text-2xl font-extrabold leading-tight">${esc(fmtEvento(e.t, { day: 'numeric' }))}</div>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="font-bold text-slate-800">${esc(e.titulo)}${esHoy ? ' <span class="ml-1 text-[11px] font-bold uppercase bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 align-middle">Hoy</span>' : ''}</p>
+                        <p class="text-sm font-semibold text-orange-700"><i class="fa-regular fa-clock mr-1"></i>${esc(eventoDia(e.t))} · <span class="whitespace-nowrap">${esc(eventoHora(e.t))}</span></p>
+                        ${String(e.descripcion || '').trim() ? `<p class="text-sm text-slate-600 mt-1 whitespace-pre-line">${esc(String(e.descripcion).trim())}</p>` : ''}
+                    </div>
+                </li>`; }).join('');
 
             let notes = '';
             if(semanaInfo.notas.length === 0) { document.getElementById('weekly-notes-container').classList.add('hidden'); }
@@ -1741,6 +1795,41 @@
             ctx.strokeStyle = '#fed7aa'; ctx.lineWidth = 1.5;
             ctx.beginPath(); ctx.moveTo(tx + firstW, y + headRowH); ctx.lineTo(tx + firstW, y + tableH); ctx.stroke();
             y += tableH + 28;
+
+            // ---- Eventos ----
+            const evs = eventosProximos();
+            if (evs.length) {
+                ctx.textAlign = 'left';
+                const textW = innerW - 56 - 120;
+                const items = evs.map(e => {
+                    ctx.font = `800 26px ${IMG_FONT}`; const tl = wrapLines(ctx, e.titulo, textW);
+                    ctx.font = `600 22px ${IMG_FONT}`; const dl = String(e.descripcion || '').trim() ? wrapLines(ctx, String(e.descripcion).trim().replace(/\s+/g, ' '), textW) : [];
+                    return { e, tl, dl, h: Math.max(96, 22 + tl.length * 34 + 32 + dl.length * 30 + 18) };
+                });
+                const boxH = 28 + 40 + items.reduce((s, it) => s + it.h + 12, 0) + 8;
+                ctx.fillStyle = '#fff7ed'; rrPath(ctx, PAD, y, innerW, boxH, 24); ctx.fill();
+                ctx.strokeStyle = '#fed7aa'; ctx.lineWidth = 2; rrPath(ctx, PAD, y, innerW, boxH, 24); ctx.stroke();
+                ctx.fillStyle = '#9a3412'; ctx.font = `800 28px ${IMG_FONT}`;
+                ctx.fillText('Eventos', PAD + 28, y + 52);
+                let ey = y + 52 + 24;
+                items.forEach(({ e, tl, dl, h }) => {
+                    const bx = PAD + 28;
+                    ctx.fillStyle = '#ffedd5'; rrPath(ctx, bx, ey, 84, 84, 16); ctx.fill();
+                    ctx.fillStyle = '#c2410c'; ctx.textAlign = 'center';
+                    ctx.font = `800 18px ${IMG_FONT}`; ctx.fillText(fmtEvento(e.t, { month: 'short' }).replace('.', '').toUpperCase(), bx + 42, ey + 30);
+                    ctx.font = `800 36px ${IMG_FONT}`; ctx.fillText(fmtEvento(e.t, { day: 'numeric' }), bx + 42, ey + 70);
+                    ctx.textAlign = 'left';
+                    const tx2 = bx + 84 + 24; let ly = ey + 28;
+                    ctx.fillStyle = '#1e293b'; ctx.font = `800 26px ${IMG_FONT}`;
+                    tl.forEach(l => { ctx.fillText(l, tx2, ly); ly += 34; });
+                    ctx.fillStyle = '#c2410c'; ctx.font = `700 22px ${IMG_FONT}`;
+                    ctx.fillText(eventoDia(e.t) + ' · ' + eventoHora(e.t), tx2, ly); ly += 32;
+                    ctx.fillStyle = '#475569'; ctx.font = `600 22px ${IMG_FONT}`;
+                    dl.forEach(l => { ctx.fillText(l, tx2, ly); ly += 30; });
+                    ey += h + 12;
+                });
+                y += boxH + 28;
+            }
 
             // ---- Notas ----
             const notas = (semanaInfo.notas || []).filter(n => (n.texto || '').trim());
@@ -2490,6 +2579,7 @@
         let draftEquipo = [];   // copia editable de los miembros
         let draftSel = [];      // draftSel[rol][día] = '' | idMiembro | 'legacy:Nombre'
         let draftProblemas = []; // copia editable de la lista de problemas
+        let draftEventos = [];   // copia editable de la lista de eventos
 
         const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         const roleNames = () => semanaInfo.roles.map(r => r.rol);
@@ -2511,6 +2601,8 @@
             }));
 
             draftProblemas = JSON.parse(JSON.stringify(problemasInfo));
+            draftEventos = JSON.parse(JSON.stringify(semanaInfo.eventos || [])).sort((a, b) => (inicioEvento(a) || 0) - (inicioEvento(b) || 0));
+            renderEventosUI();
             renderEquipoUI();
             renderScheduleGrid();
             renderProblemasUI();
@@ -2669,6 +2761,50 @@
             });
         }
 
+        window.addEvento = () => {
+            draftEventos.push({ id: 'e' + Date.now().toString(36) + Math.floor(Math.random() * 1000), titulo: '', fecha: '', hora: '', descripcion: '' });
+            renderEventosUI();
+            const inputs = document.querySelectorAll('#cfg-eventos-container .ev-titulo');
+            if (inputs.length) { const last = inputs[inputs.length - 1]; last.focus(); last.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        };
+        function renderEventosUI() {
+            const cont = document.getElementById('cfg-eventos-container');
+            document.getElementById('cfg-eventos-empty').classList.toggle('hidden', draftEventos.length > 0);
+            const inp = 'w-full border border-slate-300 p-2 rounded text-base sm:text-sm focus:ring-1 focus:ring-orange-500 outline-none bg-white';
+            cont.innerHTML = draftEventos.map((e, idx) => {
+                const t = inicioEvento(e), pasado = Number.isFinite(t) && t < Date.now();
+                return `
+                <div class="rounded-xl border ${pasado ? 'border-slate-200 bg-slate-100 opacity-70' : 'border-orange-200 bg-orange-50/50'} p-3 space-y-2" data-ev="${idx}">
+                    <div class="flex items-start gap-2">
+                        <div class="flex-1 min-w-0">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Evento ${pasado ? '<span class="ml-1 normal-case text-slate-400">(ya pasó)</span>' : ''}</label>
+                            <input type="text" value="${esc(e.titulo)}" maxlength="80" placeholder="Ej. Reunión de oración del equipo" class="ev-titulo ${inp} font-semibold">
+                        </div>
+                        <button class="ev-del text-red-400 hover:text-red-600 p-2 mt-5" title="Eliminar evento"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label><input type="date" value="${esc(e.fecha)}" class="ev-fecha ${inp}"></div>
+                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Hora</label><input type="time" value="${esc(e.hora)}" class="ev-hora ${inp}"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Detalles (opcional)</label>
+                        <textarea rows="2" maxlength="300" placeholder="Lugar, qué llevar, etc." class="ev-desc ${inp}">${esc(e.descripcion)}</textarea>
+                    </div>
+                </div>`; }).join('');
+            cont.querySelectorAll('[data-ev]').forEach(card => {
+                const idx = +card.dataset.ev, e = draftEventos[idx];
+                card.querySelector('.ev-titulo').addEventListener('input', ev => { e.titulo = ev.target.value; });
+                card.querySelector('.ev-fecha').addEventListener('input', ev => { e.fecha = ev.target.value; });
+                card.querySelector('.ev-hora').addEventListener('input', ev => { e.hora = ev.target.value; });
+                card.querySelector('.ev-desc').addEventListener('input', ev => { e.descripcion = ev.target.value; });
+                card.querySelector('.ev-del').addEventListener('click', () => {
+                    if (!confirm('¿Eliminar el evento «' + (e.titulo || 'sin nombre') + '»?')) return;
+                    draftEventos.splice(idx, 1);
+                    renderEventosUI();
+                });
+            });
+        }
+
         function appendCfgNoteUI(texto, conIcono, idx) {
             const container = document.getElementById('cfg-notas-container');
             const div = document.createElement('div');
@@ -2712,6 +2848,16 @@
                 .filter(p => p.problema || p.causas || p.revisar);
             if (problemas.some(p => !p.problema)) { window.adminTab('problemas'); showAlert('Falta el título de un problema', 'Hay un problema sin título. Escríbelo o elimina esa tarjeta.', true); return; }
 
+            // --- Eventos: se descartan filas vacías y los que pasaron hace más de 30 días ---
+            const eventos = draftEventos
+                .map(e => ({ id: e.id, titulo: (e.titulo || '').trim(), fecha: e.fecha || '', hora: e.hora || '', descripcion: (e.descripcion || '').trim() }))
+                .filter(e => e.titulo || e.fecha || e.hora || e.descripcion);
+            const evMal = eventos.find(e => !e.titulo || !Number.isFinite(inicioEvento(e)));
+            if (evMal) { window.adminTab('eventos'); showAlert('Falta información de un evento', 'Cada evento necesita nombre, fecha y hora' + (evMal.titulo ? ' (revisa «' + evMal.titulo + '»)' : '') + '. Complétalo o elimínalo.', true); return; }
+            nuevaSemana.eventos = eventos
+                .filter(e => inicioEvento(e) > Date.now() - 30 * 24 * 3600 * 1000)
+                .sort((a, b) => inicioEvento(a) - inicioEvento(b));
+
             // Los problemas se guardan junto con el equipo (mismo documento), así no hace falta cambiar las reglas de Firestore
             const nuevoEquipo = { miembros, problemas };
 
@@ -2723,7 +2869,8 @@
 
             const usaDb = !!(db && auth);
             const prevS = dbRaw.semana || {};
-            const cambioSemana = stable({ titulo: prevS.titulo, dias: prevS.dias, roles: prevS.roles, notas: prevS.notas }) !== stable(nuevaSemana);
+            const cambioSemana = stable({ titulo: prevS.titulo, dias: prevS.dias, roles: prevS.roles, notas: prevS.notas })
+                !== stable({ titulo: nuevaSemana.titulo, dias: nuevaSemana.dias, roles: nuevaSemana.roles, notas: nuevaSemana.notas });   // los eventos tienen sus propios recordatorios
             const avisar = cambioSemana && !!pushVapid && !!(document.getElementById('cfg-notificar') || {}).checked;
             const cambioProblemas = stable(problemas) !== (adminBaseline && adminBaseline.problemas);
             if (usaDb) {

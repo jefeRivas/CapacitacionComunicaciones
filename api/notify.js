@@ -27,21 +27,9 @@ module.exports = async (req, res) => {
 
     const sa = g.leerCuentaServicio();
     const at = await g.tokenDeAcceso(sa);
-    const dispositivos = await g.listarDispositivos(sa.project_id, at);
-
-    let enviados = 0, eliminados = 0, fallidos = 0;
-    for (let i = 0; i < dispositivos.length; i += 25) {
-      const grupo = dispositivos.slice(i, i + 25);
-      const resultados = await Promise.all(grupo.map((d) => g.enviarPush(sa.project_id, at, d.token, aviso).catch(() => 'error')));
-      await Promise.all(resultados.map((r, k) => {
-        if (r === 'ok') enviados++;
-        else if (r === 'invalido') { eliminados++; return g.borrarDocumento(grupo[k].nombre, at); }
-        else fallidos++;
-        return null;
-      }));
-    }
+    const r = await g.enviarATodos(sa, at, aviso);
     res.statusCode = 200;
-    return res.json({ ok: true, total: dispositivos.length, enviados, eliminados, fallidos });
+    return res.json({ ok: true, ...r });
   } catch (e) {
     console.error(e);
     res.statusCode = e.status || 500;

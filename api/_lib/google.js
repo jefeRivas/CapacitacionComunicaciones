@@ -167,4 +167,59 @@ async function enviarPush(projectId, accessToken, token, aviso) {
   return 'error';
 }
 
-module.exports = { APP_ID, leerCuentaServicio, firmarJWT, tokenDeAcceso, correoDeSesion, esAdministrador, listarDispositivos, borrarDocumento, enviarPush };
+// Envía un aviso a todos los dispositivos registrados y borra los que ya no existen.
+async function enviarATodos(sa, accessToken, aviso) {
+  const dispositivos = await listarDispositivos(sa.project_id, accessToken);
+  let enviados = 0, eliminados = 0, fallidos = 0;
+  for (let i = 0; i < dispositivos.length; i += 25) {
+    const grupo = dispositivos.slice(i, i + 25);
+    const resultados = await Promise.all(grupo.map((d) => enviarPush(sa.project_id, accessToken, d.token, aviso).catch(() => 'error')));
+    await Promise.all(resultados.map((r, k) => {
+      if (r === 'ok') enviados++;
+      else if (r === 'invalido') { eliminados++; return borrarDocumento(grupo[k].nombre, accessToken); }
+      else fallidos++;
+      return null;
+    }));
+  }
+  return { total: dispositivos.length, enviados, eliminados, fallidos };
+}
+
+// ---- Lectura/escritura de Firestore por REST (con la cuenta de servicio) ----
+const baseDocs = (projectId) => `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+
+// Convierte un valor de Firestore REST ({stringValue: ...}, {mapValue: ...}) a un valor normal de JavaScript.
+function desdeFirestore(v) {
+  if (!v || typeof v !== 'object') return null;
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return Number(v.doubleValue);
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('timestampValue' in v) return v.timestampValue;
+  if ('nullValue' in v) return null;
+  if ('arrayValue' in v) return (v.arrayValue.values || []).map(desdeFirestore);
+  if ('mapValue' in v) { const o = {}; for (const [k, x] of Object.entries(v.mapValue.fields || {})) o[k] = desdeFirestore(x); return o; }
+  return null;
+}
+
+async function leerDocumento(projectId, accessToken, ruta) {
+  const r = await fetch(baseDocs(projectId) + '/' + ruta, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (r.status === 404) return null;
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error('No se pudo leer ' + ruta + ': ' + ((j.error && j.error.message) || r.status)), { status: 500 });
+  return desdeFirestore({ mapValue: { fields: j.fields || {} } });
+}
+
+// Crea un documento solo si no existe. Devuelve true si lo creó, false si ya existía (sirve como "candado").
+async function crearSiNoExiste(projectId, accessToken, coleccion, id, campos) {
+  const fields = {};
+  for (const [k, v] of Object.entries(campos)) fields[k] = typeof v === 'number' ? { integerValue: String(v) } : { stringValue: String(v) };
+  const r = await fetch(baseDocs(projectId) + '/' + coleccion + '?documentId=' + encodeURIComponent(id), {
+    method: 'POST', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields })
+  });
+  if (r.ok) return true;
+  if (r.status === 409) return false;
+  const j = await r.json().catch(() => ({}));
+  throw Object.assign(new Error('No se pudo registrar el recordatorio: ' + ((j.error && j.error.message) || r.status)), { status: 500 });
+}
+
+module.exports = { enviarATodos, desdeFirestore, leerDocumento, crearSiNoExiste, APP_ID, leerCuentaServicio, firmarJWT, tokenDeAcceso, correoDeSesion, esAdministrador, listarDispositivos, borrarDocumento, enviarPush };

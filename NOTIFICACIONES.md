@@ -1,7 +1,10 @@
-# Notificaciones de la programación
+# Notificaciones de la programación y de los eventos
 
-Cuando el administrador guarda un cambio en la **programación** (desde *Configurar*), la app envía un aviso
-a todos los celulares que activaron las notificaciones con la campana 🔔.
+La app envía avisos a todos los celulares que activaron las notificaciones con la campana 🔔:
+
+- **Programación:** cuando el administrador guarda un cambio en la programación (desde *Configurar*).
+- **Eventos:** recordatorio automático **24 horas antes** y **1 hora antes** de cada evento
+  (*Configurar* → pestaña **Eventos**). Ver la sección [Eventos](#eventos-y-recordatorios) más abajo.
 
 Mientras no se completen los pasos de abajo, la app funciona igual que siempre: la campana y la casilla
 "Avisar al equipo" simplemente no aparecen.
@@ -181,6 +184,35 @@ Abre en el navegador tu dirección de Vercel agregando `/api/push-config` al fin
 
 ---
 
+## Eventos y recordatorios
+
+1. En **Configurar** → pestaña **Eventos** → **Agregar evento**: nombre, fecha, hora (hora de Colombia) y detalles opcionales.
+   Guarda con **Guardar Cambios**.
+2. Los hermanos ven los próximos eventos en la ventana de programación, **entre "Programación" y "Tener en cuenta"**
+   (y también en la imagen descargable). Un evento se oculta 3 horas después de empezar; los que pasaron hace más
+   de 30 días se borran solos al guardar.
+3. Los recordatorios los envía la función `/api/recordatorios`, que GitHub Actions llama **cada 10 minutos**
+   (`.github/workflows/recordatorios.yml`). No requiere configuración adicional en Firebase ni en Vercel.
+   - **24 horas antes:** "📅 Recordatorio: … Mañana sábado, 14 de noviembre a las 7:00 p. m." Si el evento se crea con
+     menos de 24 horas de anticipación, el aviso sale en la siguiente revisión ("Hoy a las …"), siempre que falten más de 3 horas.
+   - **1 hora antes:** "⏰ … Empieza en 1 hora (7:00 p. m.)".
+   - GitHub puede retrasar unos minutos sus tareas programadas: el de 1 hora normalmente llega entre 45 y 60 minutos antes.
+   - Cada recordatorio se registra en Firestore (`public/data/recordatorios`) y nunca se envía dos veces.
+     Si cambias la fecha u hora de un evento, se programan los recordatorios de la nueva hora.
+   - Guardar solo cambios de eventos **no** envía el aviso de "Programación actualizada".
+
+### Ver o probar los recordatorios en GitHub
+
+- En el repositorio → pestaña **Actions** → **Recordatorios de eventos** se ve cada ejecución (✅ o ❌).
+  Para ejecutarlo a mano: **Run workflow**.
+- Si una ejecución sale con ❌, abre el detalle: muestra el mensaje de error de la app (por ejemplo, una variable de Vercel).
+- **Importante:** si el repositorio pasa **60 días sin cambios**, GitHub pausa la tarea y envía un correo.
+  Para reactivarla: pestaña **Actions** → **Recordatorios de eventos** → **Enable workflow**.
+- Si algún día la app cambia de dirección, crea en GitHub la variable `APP_URL` (Settings → Secrets and variables →
+  Actions → pestaña *Variables*) con la nueva dirección, por ejemplo `https://otra.vercel.app`.
+
+---
+
 ## Limitaciones
 
 - **iPhone / iPad:** requiere iOS 16.4 o superior y la app **instalada** en la pantalla de inicio.
@@ -193,6 +225,8 @@ Abre en el navegador tu dirección de Vercel agregando `/api/push-config` al fin
 
 - `api/notify.js`: envía los avisos (solo administradores).
 - `api/push-config.js`: entrega la clave pública a la app.
+- `api/recordatorios.js`: envía los recordatorios de eventos (24 h y 1 h antes).
+- `.github/workflows/recordatorios.yml`: llama a `/api/recordatorios` cada 10 minutos.
 - `api/_lib/google.js`: conexión con Firebase/Google sin dependencias externas.
 - `sw.js`: recibe y muestra las notificaciones; al tocarlas abre la app.
 - `icons/badge-96.png`: ícono pequeño de la barra de notificaciones (Android).
