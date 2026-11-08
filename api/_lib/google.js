@@ -4,18 +4,80 @@ const crypto = require('crypto');
 const APP_ID = 'comunicaciones-app';
 const FIREBASE_WEB_API_KEY = 'AIzaSyBP6OvaJJopQCn2PgHvWMXeQAwSoLK-7A0'; // clave pública (la misma de index.html)
 
-function leerCuentaServicio() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) throw Object.assign(new Error('Falta la variable FIREBASE_SERVICE_ACCOUNT en Vercel.'), { status: 500 });
-  let sa;
-  try { sa = JSON.parse(raw); } catch (e) {
-    try { sa = JSON.parse(Buffer.from(raw, 'base64').toString('utf8')); } catch (e2) {
-      throw Object.assign(new Error('FIREBASE_SERVICE_ACCOUNT no es un JSON válido.'), { status: 500 });
+// Lee la cuenta de servicio de la variable FIREBASE_SERVICE_ACCOUNT.
+// Es tolerante a lo que suele pasar al copiar y pegar el archivo .json en Vercel: saltos de línea reales dentro
+// de la clave privada, saltos de línea de Windows, comillas "curvas", comillas o texto alrededor, contenido en
+// base64, etc. Si el JSON no se puede leer, extrae directamente los 3 datos que se necesitan.
+const errorCuenta = (msg) => Object.assign(new Error(msg), { status: 500 });
+
+function normalizarClave(pk) {
+  const txt = String(pk || '').replace(/\\r/g, '').replace(/\\n/g, '\n');
+  const m = txt.match(/-----BEGIN ([A-Z ]*)PRIVATE KEY-----([\s\S]*?)-----END \1PRIVATE KEY-----/);
+  if (!m) return null;
+  const cuerpo = m[2].replace(/\\[nr]/g, '').replace(/[^A-Za-z0-9+/=]/g, '');
+  if (cuerpo.length < 100) return null;
+  const tipo = m[1];
+  return `-----BEGIN ${tipo}PRIVATE KEY-----\n${cuerpo.match(/.{1,64}/g).join('\n')}\n-----END ${tipo}PRIVATE KEY-----\n`;
+}
+
+// Escapa los caracteres de control (saltos de línea, tabulaciones) que quedaron DENTRO de los textos del JSON.
+function escaparControlesEnTextos(t) {
+  let out = '', enTexto = false, esc = false;
+  for (const ch of t) {
+    if (enTexto) {
+      if (esc) { esc = false; out += ch; continue; }
+      if (ch === '\\') { esc = true; out += ch; continue; }
+      if (ch === '"') { enTexto = false; out += ch; continue; }
+      if (ch === '\n') { out += '\\n'; continue; }
+      if (ch === '\r') continue;
+      if (ch === '\t') { out += '\\t'; continue; }
+      out += ch;
+    } else {
+      if (ch === '"') enTexto = true;
+      out += ch;
     }
   }
-  if (!sa.client_email || !sa.private_key || !sa.project_id) throw Object.assign(new Error('FIREBASE_SERVICE_ACCOUNT incompleta.'), { status: 500 });
-  sa.private_key = sa.private_key.replace(/\\n/g, '\n');
-  return sa;
+  return out;
+}
+
+function intentarJSON(t) {
+  try { let v = JSON.parse(t); if (typeof v === 'string') v = JSON.parse(v); return v && typeof v === 'object' ? v : null; } catch (e) { return null; }
+}
+
+function leerCuentaServicio() {
+  let raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw || !raw.trim()) throw errorCuenta('Falta la variable FIREBASE_SERVICE_ACCOUNT en Vercel.');
+  raw = raw.replace(/^﻿/, '').trim()
+    .replace(/^FIREBASE_SERVICE_ACCOUNT\s*=\s*/, '')          // si se pegó como línea "NOMBRE=valor"
+    .replace(/[“”„‟″]/g, '"')         // comillas curvas → rectas
+    .replace(/[ ​﻿]/g, ' ');                     // espacios invisibles
+  if (/^'[\s\S]*'$/.test(raw) || /^`[\s\S]*`$/.test(raw)) raw = raw.slice(1, -1).trim();
+
+  const candidatos = [raw, escaparControlesEnTextos(raw)];
+  const i = raw.indexOf('{'), j = raw.lastIndexOf('}');
+  if (i >= 0 && j > i) { const centro = raw.slice(i, j + 1); candidatos.push(centro, escaparControlesEnTextos(centro)); }
+  if (!raw.includes('{')) { try { candidatos.push(Buffer.from(raw, 'base64').toString('utf8')); } catch (e) {} }
+
+  let sa = null;
+  for (const c of candidatos) { sa = intentarJSON(c); if (sa) break; }
+
+  // Último recurso: extraer los datos aunque el JSON esté dañado.
+  if (!sa) {
+    const campo = (n) => { const m = raw.match(new RegExp('"' + n + '"\\s*:\\s*"([^"]*)"')); return m ? m[1] : ''; };
+    const pk = raw.match(/-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/);
+    sa = { project_id: campo('project_id'), client_email: campo('client_email'), private_key: pk ? pk[0] : '' };
+  }
+
+  const faltan = [];
+  if (!sa.project_id) faltan.push('project_id');
+  if (!sa.client_email) faltan.push('client_email');
+  const clave = normalizarClave(sa.private_key);
+  if (!clave) faltan.push('private_key');
+  if (faltan.length) throw errorCuenta('FIREBASE_SERVICE_ACCOUNT no es un JSON válido: no se encontró ' + faltan.join(', ') + '. Vuelve a pegar el archivo .json completo (desde la { inicial hasta la } final).');
+  try { crypto.createPrivateKey(clave); } catch (e) {
+    throw errorCuenta('FIREBASE_SERVICE_ACCOUNT: la clave privada (private_key) está incompleta o dañada. Vuelve a pegar el archivo .json completo, o genera una clave nueva en Firebase.');
+  }
+  return { project_id: String(sa.project_id).trim(), client_email: String(sa.client_email).trim(), private_key: clave };
 }
 
 const b64url = (b) => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
