@@ -968,7 +968,7 @@
                 <!-- Días y Participantes -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
                     <h3 class="font-bold text-slate-700 mb-1">Participantes por Día y Rol</h3>
-                    <p class="text-xs text-slate-500 mb-3">Cada lista muestra solo a los miembros <strong>activos</strong> que tengan esa habilidad y que no estén asignados en otro rol el mismo día. Si no hay nadie, deja la opción vacía.</p>
+                    <p class="text-xs text-slate-500 mb-3">Cada lista muestra solo a los miembros <strong>activos</strong> que tengan esa habilidad, que <strong>puedan servir ese día</strong> (se marca en Equipo) y que no estén asignados en otro rol el mismo día. Si no hay nadie, deja la opción vacía.</p>
                     <div class="hidden sm:block">
                     <table class="w-full min-w-[600px] text-sm">
                         <thead>
@@ -1007,7 +1007,7 @@
                         <h3 class="font-bold text-slate-700">Miembros del equipo</h3>
                         <button onclick="addMember()" class="text-xs bg-orange-100 text-orange-700 px-3 py-1.5 rounded hover:bg-orange-200 font-bold"><i class="fa-solid fa-user-plus mr-1"></i> Agregar miembro</button>
                     </div>
-                    <p class="text-xs text-slate-500 mb-3">Marca las habilidades de cada persona y si está activa. Los miembros inactivos no aparecen en las listas de la programación.</p>
+                    <p class="text-xs text-slate-500 mb-3">Marca las habilidades de cada persona, los días que puede servir (martes, jueves, domingo) y si está activa. Los miembros inactivos no aparecen en las listas de la programación.</p>
                     <div id="cfg-equipo-container" class="space-y-3"></div>
                     <p id="cfg-equipo-empty" class="hidden text-sm text-slate-500 text-center py-4">Aún no hay miembros. Agrega el primero.</p>
                     <!-- Solo móvil: botón al final de la lista para no tener que subir -->
@@ -1592,7 +1592,7 @@
             }
         };
         window.addMember = () => {
-            draftEquipo.push({ id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1000), nombre: '', activo: true, skills: [] });
+            draftEquipo.push({ id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1000), nombre: '', activo: true, skills: [], dias: DIAS_SERVICIO.map(d => d.k) });
             renderEquipoUI(); renderScheduleGrid();
             const inputs = document.querySelectorAll('#cfg-equipo-container input[type=text]');
             if (inputs.length) {
@@ -2611,6 +2611,24 @@
             semanaInfo.notas.forEach((n, nIdx) => appendCfgNoteUI(n.texto, n.conIcono, nIdx));
         }
 
+        // ---- Días de servicio y disponibilidad de cada miembro ----
+        const DIAS_SERVICIO = [{ k: 'martes', l: 'Martes' }, { k: 'jueves', l: 'Jueves' }, { k: 'domingo', l: 'Domingo' }];
+        const OTROS_DIAS = ['lunes', 'miercoles', 'viernes', 'sabado'];
+        const sinTildes = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        // Día de servicio de una columna de la programación según su nombre ("Martes 11", "Jueves"...).
+        // Si la columna está vacía se usa el orden Martes, Jueves, Domingo; si es otro día de la semana, no se filtra.
+        function diaDeColumna(dIdx) {
+            const el = document.getElementById(`cfg-dia-${dIdx}`);
+            const t = sinTildes(el ? el.value : '');
+            const d = DIAS_SERVICIO.find(x => t.includes(x.k));
+            if (d) return d;
+            if (OTROS_DIAS.some(x => t.includes(x))) return null;
+            return t.trim() ? null : (DIAS_SERVICIO[dIdx] || null);
+        }
+        // Miembros guardados antes de este cambio no tienen "dias": se consideran disponibles todos los días.
+        const diasDe = (m) => Array.isArray(m.dias) ? m.dias : DIAS_SERVICIO.map(d => d.k);
+        const disponible = (m, dIdx) => { const d = diaDeColumna(dIdx); return !d || diasDe(m).includes(d.k); };
+
         // ---- Listas desplegables de la programación ----
         function optionsFor(rIdx, dIdx) {
             const role = semanaInfo.roles[rIdx].rol;
@@ -2620,7 +2638,7 @@
             let html = `<option value="">— Vacío —</option>`;
             let hasCurrent = current === '';
             draftEquipo
-                .filter(m => m.nombre.trim() && m.activo && m.skills.includes(role) && !taken.has(m.id))
+                .filter(m => m.nombre.trim() && m.activo && m.skills.includes(role) && disponible(m, dIdx) && !taken.has(m.id))
                 .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
                 .forEach(m => {
                     if (m.id === current) hasCurrent = true;
@@ -2632,7 +2650,8 @@
                 if (current.startsWith('legacy:')) label = current.slice(7) + ' (no registrado en el equipo)';
                 else {
                     const m = draftEquipo.find(x => x.id === current);
-                    label = m ? m.nombre + (!m.activo ? ' (inactivo)' : ' (sin habilidad de ' + role + ')') : '';
+                    label = m ? m.nombre + (!m.activo ? ' (inactivo)' : !m.skills.includes(role) ? ' (sin habilidad de ' + role + ')'
+                        : !disponible(m, dIdx) ? ' (no puede servir el ' + diaDeColumna(dIdx).l.toLowerCase() + ')' : ' (ya asignado en otro rol)') : '';
                 }
                 if (label) html += `<option value="${esc(current)}" selected>⚠ ${esc(label)}</option>`;
             }
@@ -2683,6 +2702,9 @@
         document.getElementById('cfg-roles-cards').addEventListener('input', e => {
             if (e.target.classList.contains('cfg-dia-m')) document.getElementById(`cfg-dia-${e.target.dataset.d}`).value = e.target.value;
         });
+        // Al terminar de escribir el nombre de un día se recalculan las listas (según quién puede servir ese día)
+        document.getElementById('cfg-roles-cards').addEventListener('change', e => { if (e.target.classList.contains('cfg-dia-m')) renderScheduleGrid(); });
+        [0, 1, 2].forEach(i => document.getElementById(`cfg-dia-${i}`).addEventListener('change', () => renderScheduleGrid()));
         [0, 1, 2].forEach(i => document.getElementById(`cfg-dia-${i}`).addEventListener('input', e => {
             const m = document.querySelector(`.cfg-dia-m[data-d="${i}"]`);
             if (m) m.value = e.target.value;
@@ -2705,6 +2727,11 @@
                         <span class="text-xs font-bold text-slate-500 uppercase self-center">Habilidades:</span>
                         ${roleNames().map(rn => `<label class="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer"><input type="checkbox" class="m-skill w-4 h-4 accent-orange-500" value="${esc(rn)}" ${m.skills.includes(rn) ? 'checked' : ''}> ${esc(rn)}</label>`).join('')}
                     </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase self-center">Puede servir:</span>
+                        ${DIAS_SERVICIO.map(d => `<label class="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer"><input type="checkbox" class="m-dia w-4 h-4 accent-sky-600" value="${d.k}" ${diasDe(m).includes(d.k) ? 'checked' : ''}> ${d.l}</label>`).join('')}
+                        ${diasDe(m).length === 0 ? '<span class="text-xs font-bold text-amber-600 self-center"><i class="fa-solid fa-triangle-exclamation mr-1"></i>No aparecerá en ningún día</span>' : ''}
+                    </div>
                 </div>`).join('');
 
             cont.querySelectorAll('[data-m]').forEach(card => {
@@ -2714,6 +2741,10 @@
                 card.querySelectorAll('.m-skill').forEach(cb => cb.addEventListener('change', () => {
                     m.skills = [...card.querySelectorAll('.m-skill')].filter(x => x.checked).map(x => x.value);
                     renderScheduleGrid();
+                }));
+                card.querySelectorAll('.m-dia').forEach(cb => cb.addEventListener('change', () => {
+                    m.dias = [...card.querySelectorAll('.m-dia')].filter(x => x.checked).map(x => x.value);
+                    renderEquipoUI(); renderScheduleGrid();
                 }));
                 card.querySelector('.m-del').addEventListener('click', () => {
                     if (!confirm('¿Eliminar a ' + (m.nombre || 'este miembro') + ' del equipo? También se quitará de la programación.')) return;
@@ -2826,7 +2857,8 @@
 
             const validRoles = roleNames();
             const miembros = draftEquipo.map(m => ({
-                id: m.id, nombre: m.nombre.trim(), activo: !!m.activo, skills: m.skills.filter(s => validRoles.includes(s))
+                id: m.id, nombre: m.nombre.trim(), activo: !!m.activo, skills: m.skills.filter(s => validRoles.includes(s)),
+                dias: DIAS_SERVICIO.map(d => d.k).filter(k => diasDe(m).includes(k))
             }));
             const nameOf = (id) => (miembros.find(m => m.id === id) || {}).nombre || '';
 
