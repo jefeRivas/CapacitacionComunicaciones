@@ -8,8 +8,10 @@
  *  - La página (index.html) se pide primero a la red (sin caché); solo si no hay
  *    conexión se muestra la última copia guardada.
  *  - Los iconos y el manifest se guardan para que el ícono cargue rápido.
+ *  - Recibe las notificaciones (push) que envía el administrador al cambiar la
+ *    programación y abre la app al tocarlas.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'comunicaciones-' + VERSION;
 const PRECACHE = [
   '/',
@@ -19,7 +21,8 @@ const PRECACHE = [
   '/icons/icon-maskable-512.png',
   '/icons/apple-touch-icon.png',
   '/icons/favicon-32.png',
-  '/icons/icon.svg'
+  '/icons/icon.svg',
+  '/icons/badge-96.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -45,6 +48,8 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   // Firebase, Firestore, Auth, fuentes y CDNs: siempre directo a la red.
   if (url.origin !== self.location.origin) return;
+  // Funciones del servidor (/api): siempre directo a la red, nunca desde la caché.
+  if (url.pathname.startsWith('/api/')) return;
 
   const isPage = req.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
 
@@ -77,4 +82,40 @@ self.addEventListener('fetch', (event) => {
       return cached || network;
     })
   );
+});
+
+// ================= NOTIFICACIONES =================
+// Firebase Cloud Messaging entrega el aviso como un evento "push".
+self.addEventListener('push', (event) => {
+  let p = {};
+  try { p = event.data ? event.data.json() : {}; } catch (e) { p = { data: { body: event.data ? event.data.text() : '' } }; }
+  const n = p.notification || {};
+  const d = p.data || {};
+  const title = d.title || n.title || 'Comunicaciones';
+  const opciones = {
+    body: d.body || n.body || 'Hay novedades en la programación.',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png',
+    tag: d.tag || n.tag || 'programacion',
+    renotify: true,
+    data: { url: d.url || (p.fcmOptions && p.fcmOptions.link) || '/' }
+  };
+  event.waitUntil(self.registration.showNotification(title, opciones));
+});
+
+// Al tocar la notificación se abre (o se enfoca) la app.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const destino = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil((async () => {
+    const abiertas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const c of abiertas) {
+      if (new URL(c.url).origin === self.location.origin) {
+        await c.focus();
+        try { c.postMessage({ tipo: 'abrir-programacion' }); } catch (e) {}
+        return;
+      }
+    }
+    await self.clients.openWindow(destino);
+  })());
 });

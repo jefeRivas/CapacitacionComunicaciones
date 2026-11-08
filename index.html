@@ -101,6 +101,7 @@
         .hdr-btn { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; height: 2.6rem; min-width: 2.6rem; padding: 0 .85rem; border-radius: 9999px; font-weight: 800; font-size: .85rem; color: #fff; background: rgba(255, 255, 255, .18); border: 1px solid rgba(255, 255, 255, .28); backdrop-filter: blur(6px); }
         .hdr-btn:hover { background: rgba(255, 255, 255, .32); }
         .hdr-btn i { font-size: 1.05rem; }
+        .hdr-btn.notif-on { background: #fff; color: var(--brand); }
         .nav-strip { background: #fff; border-bottom: 1px solid #fde7d2; }
 
         /* Menú superior (PC): píldoras */
@@ -182,6 +183,10 @@
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 <p class="hidden lg:block text-sm text-orange-100 italic mr-2">"Haciéndolo todo con excelencia"</p>
+                <!-- Botón de notificaciones (solo aparece cuando están configuradas) -->
+                <button id="notif-btn" onclick="toggleNotificaciones()" class="hdr-btn" style="display:none" aria-label="Notificaciones" title="Activar notificaciones">
+                    <i class="fa-regular fa-bell"></i><span class="hidden md:inline">Avisos</span>
+                </button>
                 <button onclick="openWeekly()" class="hdr-btn" aria-label="Programación" title="Programación">
                     <i class="fa-regular fa-calendar-days"></i><span class="hidden md:inline">Programación</span>
                 </button>
@@ -1020,7 +1025,10 @@
               </div>
             </div>
 
-            <div class="bg-white border-t border-slate-200 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+            <div class="bg-white border-t border-slate-200 px-6 py-4 rounded-b-2xl flex flex-wrap items-center justify-end gap-3">
+                <label id="cfg-notificar-wrap" class="mr-auto items-center gap-2 text-sm font-bold text-slate-600 cursor-pointer" style="display:none">
+                    <input type="checkbox" id="cfg-notificar" checked class="w-4 h-4 accent-orange-600"> <i class="fa-regular fa-bell text-orange-500"></i> Avisar al equipo si cambia la programación
+                </label>
                 <button onclick="closeAdminModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors">Cancelar</button>
                 <button onclick="saveAdminConfig()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl transition-colors"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar Cambios</button>
             </div>
@@ -1226,7 +1234,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, writeBatch, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, collection, onSnapshot, writeBatch, runTransaction, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // ================= FIREBASE =================
         const MIS_CREDENCIALES_FIREBASE = {
@@ -2714,6 +2722,9 @@
             };
 
             const usaDb = !!(db && auth);
+            const prevS = dbRaw.semana || {};
+            const cambioSemana = stable({ titulo: prevS.titulo, dias: prevS.dias, roles: prevS.roles, notas: prevS.notas }) !== stable(nuevaSemana);
+            const avisar = cambioSemana && !!pushVapid && !!(document.getElementById('cfg-notificar') || {}).checked;
             const cambioProblemas = stable(problemas) !== (adminBaseline && adminBaseline.problemas);
             if (usaDb) {
                 if (!currentUser || !adminBaseline) { showAlert('Sesión requerida', 'Inicia sesión como administrador y abre Configurar de nuevo para guardar.', true); return; }
@@ -2731,6 +2742,7 @@
                         tx.set(refE, dataE, { merge: true });
                     });
                     showAlert('¡Configuración Guardada!', 'Guardado en la nube. Se actualizará para todo el equipo en vivo.');
+                    if (avisar) notificarProgramacion(nuevaSemana.titulo);
                 } catch (e) {
                     console.error(e);
                     if (e && e.conflicto) { showAlert('Los datos cambiaron', 'Alguien modificó la programación o el equipo mientras tenías esta ventana abierta. No se guardó nada para no pisar sus cambios. Cierra, vuelve a abrir Configurar y repite tus cambios.', true); return; }
@@ -3181,6 +3193,120 @@
         function handleResetQuiz() { document.getElementById('quiz-results').classList.add('hidden'); document.getElementById('quiz-intro').classList.remove('hidden'); showLastQuiz(); }
 
         showLastQuiz();
+
+        // ================= NOTIFICACIONES PUSH =================
+        // Cada persona activa los avisos desde el botón de la campana. Su dispositivo queda registrado en Firebase
+        // (artifacts/{appId}/public/data/dispositivos) y, cuando el administrador guarda un cambio en la programación,
+        // el servidor (/api/notify en Vercel) envía la notificación a todos los dispositivos registrados.
+        let pushVapid = '';
+        const PUSH_ID_KEY = 'push_dispositivo_id';
+        const esIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const esInstalada = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+        const pushSoportado = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+        const pushIdGuardado = () => { try { return localStorage.getItem(PUSH_ID_KEY) || ''; } catch (e) { return ''; } };
+        const pushActivo = () => pushSoportado() && Notification.permission === 'granted' && !!pushIdGuardado();
+        let messagingMod = null;
+        async function pushMessaging() {
+            if (!messagingMod) messagingMod = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js");
+            if (!(await messagingMod.isSupported())) throw new Error('no-soportado');
+            return { m: messagingMod, messaging: messagingMod.getMessaging(app) };
+        }
+        async function pushIdDe(token) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(token));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 40);
+        }
+        async function pushRegistrar() {
+            const { m, messaging } = await pushMessaging();
+            await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+            const reg = await navigator.serviceWorker.ready;
+            const token = await m.getToken(messaging, { vapidKey: pushVapid, serviceWorkerRegistration: reg });
+            if (!token) throw new Error('sin-token');
+            const id = await pushIdDe(token);
+            const anterior = pushIdGuardado();
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dispositivos', id), {
+                token, plataforma: esIOS ? 'ios' : (/android/i.test(navigator.userAgent) ? 'android' : 'otro'), actualizado: Date.now()
+            });
+            if (anterior && anterior !== id) deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dispositivos', anterior)).catch(() => {});
+            try { localStorage.setItem(PUSH_ID_KEY, id); } catch (e) {}
+        }
+        function pintarBotonNotif() {
+            const b = document.getElementById('notif-btn'); if (!b) return;
+            const w = document.getElementById('cfg-notificar-wrap'); if (w) w.style.display = pushVapid ? 'flex' : 'none';
+            const visible = !!pushVapid && !!db && (pushSoportado() || (esIOS && !esInstalada()));
+            b.style.display = visible ? '' : 'none';
+            const on = pushActivo();
+            b.classList.toggle('notif-on', on);
+            b.title = on ? 'Notificaciones activadas' : 'Activar notificaciones';
+            b.querySelector('i').className = on ? 'fa-solid fa-bell' : 'fa-regular fa-bell';
+        }
+        window.toggleNotificaciones = async () => {
+            if (esIOS && !pushSoportado()) {
+                showAlert('Instala la app primero', 'En iPhone las notificaciones solo funcionan con la app instalada (iOS 16.4 o superior). Toca el botón Compartir de Safari → «Agregar a pantalla de inicio», abre la app desde ese ícono y vuelve a tocar la campana.', true);
+                return;
+            }
+            if (!pushSoportado()) { showAlert('No disponible', 'Este navegador no permite notificaciones. Prueba con Chrome (Android) o con la app instalada en iPhone.', true); return; }
+            if (pushActivo()) {
+                if (!confirm('¿Desactivar las notificaciones en este dispositivo?')) return;
+                try {
+                    const { m, messaging } = await pushMessaging();
+                    await m.deleteToken(messaging).catch(() => {});
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'dispositivos', pushIdGuardado())).catch(() => {});
+                } catch (e) { console.warn(e); }
+                try { localStorage.removeItem(PUSH_ID_KEY); } catch (e) {}
+                pintarBotonNotif();
+                showAlert('Notificaciones desactivadas', 'Ya no recibirás avisos en este dispositivo. Puedes volver a activarlas cuando quieras con la campana.');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                showAlert('Notificaciones bloqueadas', 'Las bloqueaste para esta app. Actívalas en los ajustes del teléfono (o del sitio en el navegador) y vuelve a tocar la campana.', true);
+                return;
+            }
+            const permiso = await Notification.requestPermission();
+            if (permiso !== 'granted') { showAlert('Sin permiso', 'No se activaron las notificaciones porque no se dio el permiso.', true); return; }
+            try {
+                await pushRegistrar();
+                pintarBotonNotif();
+                showAlert('¡Notificaciones activadas!', 'Te avisaremos en este dispositivo cada vez que se actualice la programación.');
+            } catch (e) {
+                console.error('Error activando notificaciones', e);
+                const code = (e && (e.code || e.message)) || '';
+                showAlert('No se pudieron activar', /permission-denied/.test(code)
+                    ? 'Firebase no permitió registrar este dispositivo. Falta la regla de Firestore para «dispositivos».'
+                    : 'Revisa tu conexión a internet e inténtalo de nuevo.', true);
+            }
+        };
+        async function notificarProgramacion(titulo) {
+            const extra = (txt) => {
+                const msg = document.getElementById('alert-msg');
+                if (msg && document.getElementById('alert-modal').classList.contains('open')) msg.innerText += '\n\n' + txt;
+            };
+            try {
+                const u = auth && auth.currentUser; if (!u) return;
+                const r = await fetch('/api/notify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + await u.getIdToken() },
+                    body: JSON.stringify({ titulo: titulo || '' })
+                });
+                const j = await r.json().catch(() => ({}));
+                if (r.ok) extra(j.enviados ? `🔔 Se envió un aviso a ${j.enviados} dispositivo(s).` : '🔔 Aún no hay dispositivos con las notificaciones activadas.');
+                else extra('⚠️ No se pudo enviar el aviso: ' + (j.error || ('error ' + r.status)));
+            } catch (e) { console.warn('Aviso no enviado', e); extra('⚠️ No se pudo enviar el aviso (sin conexión con el servidor).'); }
+        }
+        async function iniciarNotificaciones() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+            try {
+                const r = await fetch('/api/push-config', { cache: 'no-store' });
+                if (r.ok) pushVapid = String(((await r.json()) || {}).vapidKey || '');
+            } catch (e) { pushVapid = ''; }
+            pintarBotonNotif();
+            // Si ya estaban activadas, se renueva el registro en silencio (los tokens pueden cambiar con el tiempo)
+            if (pushVapid && db && pushActivo()) pushRegistrar().then(pintarBotonNotif).catch(e => console.warn('No se renovó el registro de avisos', e));
+        }
+        // Al tocar una notificación se abre la programación
+        if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (ev) => {
+            if (ev.data && ev.data.tipo === 'abrir-programacion' && window.openWeekly) window.openWeekly();
+        });
+        iniciarNotificaciones();
 
         // Inicializar app principal
         initApp();
