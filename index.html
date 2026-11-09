@@ -969,6 +969,10 @@
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
                     <h3 class="font-bold text-slate-700 mb-1">Participantes por Día y Rol</h3>
                     <p class="text-xs text-slate-500 mb-3">Cada lista muestra solo a los miembros <strong>activos</strong> que tengan esa habilidad, que <strong>puedan servir ese día</strong> (se marca en Equipo) y que no estén asignados en otro rol el mismo día. Si no hay nadie, deja la opción vacía.</p>
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        <button type="button" onclick="asignarAutomaticamente()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm shadow-sm transition-colors"><i class="fa-solid fa-wand-magic-sparkles"></i> Asignar automáticamente</button>
+                        <span class="text-xs text-slate-500">Llena la semana según disponibilidad. Después puedes ajustar lo que quieras antes de guardar.</span>
+                    </div>
                     <div class="hidden sm:block">
                     <table class="w-full min-w-[600px] text-sm">
                         <thead>
@@ -2629,6 +2633,85 @@
         const diasDe = (m) => Array.isArray(m.dias) ? m.dias : DIAS_SERVICIO.map(d => d.k);
         const disponible = (m, dIdx) => { const d = diaDeColumna(dIdx); return !d || diasDe(m).includes(d.k); };
 
+        // ---- Asignación automática ----
+        // Reglas obligatorias: activo, con la habilidad del rol, disponible ese día, una sola vez por día y máximo 2 días por semana.
+        // Regla preferente: quien sirvió 2 o más días la semana anterior, idealmente no repite 2 días esta semana.
+        // Además se reparte de forma pareja. Se prueban muchas combinaciones al azar y se queda la mejor.
+        // slots: [{ d }] · candidatos[i]: ids posibles para el slot i · previo: { id: días servidos la semana anterior }
+        function calcularAsignacion(slots, candidatos, previo, intentos = 600, rnd = Math.random) {
+            const MAX_DIAS = 2;
+            const nD = Math.max(0, ...slots.map(x => x.d)) + 1;
+            let mejor = null;
+            for (let it = 0; it < intentos; it++) {
+                const orden = slots.map((_, i) => i).sort((a, b) => (candidatos[a].length - candidatos[b].length) || (rnd() - 0.5));
+                const sel = slots.map(() => '');
+                const usados = Array.from({ length: nD }, () => new Set());
+                const cuenta = {};
+                for (const i of orden) {
+                    const d = slots[i].d;
+                    const ops = candidatos[i].filter(id => !usados[d].has(id) && (cuenta[id] || 0) < MAX_DIAS);
+                    if (!ops.length) continue;
+                    let elegido = '', menor = Infinity;
+                    for (const id of ops) {
+                        const c = cuenta[id] || 0, p = previo[id] || 0;
+                        const costo = c * 10 + (p >= 2 && c >= 1 ? 40 : 0) + p * 3 + rnd() * 8;
+                        if (costo < menor) { menor = costo; elegido = id; }
+                    }
+                    sel[i] = elegido; usados[d].add(elegido); cuenta[elegido] = (cuenta[elegido] || 0) + 1;
+                }
+                const vacios = sel.filter(x => !x).length;
+                const excepciones = Object.keys(cuenta).filter(id => cuenta[id] >= 2 && (previo[id] || 0) >= 2);
+                const puntaje = vacios * 1000 + excepciones.length * 100
+                    + Object.values(cuenta).reduce((t, c) => t + c * c, 0) * 5
+                    + Object.keys(cuenta).reduce((t, id) => t + cuenta[id] * (previo[id] || 0), 0);
+                if (!mejor || puntaje < mejor.puntaje) mejor = { sel, puntaje, vacios, excepciones, cuenta };
+            }
+            return mejor || { sel: [], vacios: 0, excepciones: [], cuenta: {}, puntaje: 0 };
+        }
+        // Días servidos por cada miembro en una semana guardada ({ id: número de días })
+        function diasServidos(semana, miembros) {
+            const porDia = {};
+            ((semana && semana.roles) || []).forEach(r => (r.personas || []).forEach((nombre, d) => {
+                let id = r.ids && r.ids[d];
+                if (!id && String(nombre || '').trim()) { const m = miembros.find(x => x.nombre.trim().toLowerCase() === String(nombre).trim().toLowerCase()); id = m && m.id; }
+                if (id) (porDia[id] = porDia[id] || new Set()).add(d);
+            }));
+            return Object.fromEntries(Object.entries(porDia).map(([id, set]) => [id, set.size]));
+        }
+        window.asignarAutomaticamente = () => {
+            const hayAlgo = draftSel.some(row => row.some(Boolean));
+            if (hayAlgo && !confirm('Se reemplazarán los participantes que ya están en la programación. ¿Continuar?')) return;
+            // Semana anterior: si cambiaste el título, es la que está guardada; si no, la copia guardada de la semana previa.
+            const guardada = dbRaw.semana || semanaInfo || {};
+            const titulo = document.getElementById('cfg-titulo').value.trim();
+            const esNueva = titulo && titulo !== String(guardada.titulo || '').trim();
+            const anterior = esNueva ? guardada : (guardada.anterior || null);
+            const previo = anterior ? diasServidos(anterior, draftEquipo) : {};
+
+            const slots = [], candidatos = [];
+            semanaInfo.roles.forEach((r, rIdx) => [0, 1, 2].forEach(d => {
+                slots.push({ r: rIdx, d });
+                candidatos.push(draftEquipo.filter(m => m.nombre.trim() && m.activo && m.skills.includes(r.rol) && disponible(m, d)).map(m => m.id));
+            }));
+            const res = calcularAsignacion(slots, candidatos, previo);
+            slots.forEach((x, i) => { draftSel[x.r][x.d] = res.sel[i] || ''; });
+            renderScheduleGrid();
+
+            const nombre = (id) => (draftEquipo.find(m => m.id === id) || {}).nombre || id;
+            const diaN = (d) => document.getElementById(`cfg-dia-${d}`).value.trim() || ('Día ' + (d + 1));
+            let msg = `Se llenaron ${slots.length - res.vacios} de ${slots.length} puestos.`;
+            if (res.vacios) {
+                const faltan = slots.map((x, i) => res.sel[i] ? null : `${semanaInfo.roles[x.r].rol} – ${diaN(x.d)}`).filter(Boolean);
+                msg += `\n\n⚠ Sin nadie disponible: ${faltan.join(', ')}. Revisa las habilidades y los días de cada miembro en Equipo, o asígnalo a mano.`;
+            }
+            if (res.excepciones.length) msg += `\n\n⚠ Por disponibilidad, repiten 2 días como la semana anterior: ${res.excepciones.map(nombre).join(', ')}.`;
+            msg += anterior
+                ? `\n\nSemana anterior usada para comparar: «${String(anterior.titulo || 'sin título').trim()}».`
+                : '\n\nNo hay una semana anterior registrada para comparar. Consejo: cambia primero el título a la nueva semana y luego usa este botón.';
+            msg += '\n\nRevisa y ajusta lo que necesites; nada se guarda hasta que toques «Guardar Cambios».';
+            showAlert(res.vacios ? 'Programación llenada (incompleta)' : 'Programación llenada', msg, !!res.vacios);
+        };
+
         // ---- Listas desplegables de la programación ----
         function optionsFor(rIdx, dIdx) {
             const role = semanaInfo.roles[rIdx].rol;
@@ -2892,6 +2975,13 @@
             nuevaSemana.eventos = eventos
                 .filter(e => inicioEvento(e) > Date.now() - 30 * 24 * 3600 * 1000)
                 .sort((a, b) => inicioEvento(a) - inicioEvento(b));
+
+            // Al empezar una semana nueva (cambia el título) se guarda una copia de la semana que se reemplaza,
+            // para que la asignación automática pueda compararse con ella.
+            const semGuardada = dbRaw.semana || semanaInfo || {};
+            if (String(nuevaSemana.titulo || '').trim() !== String(semGuardada.titulo || '').trim() && Array.isArray(semGuardada.roles)) {
+                nuevaSemana.anterior = { titulo: semGuardada.titulo || '', dias: semGuardada.dias || [], roles: semGuardada.roles.map(r => ({ rol: r.rol, personas: r.personas || [], ids: r.ids || [] })) };
+            } else if (semGuardada.anterior) nuevaSemana.anterior = semGuardada.anterior;
 
             // Los problemas se guardan junto con el equipo (mismo documento), así no hace falta cambiar las reglas de Firestore
             const nuevoEquipo = { miembros, problemas };
