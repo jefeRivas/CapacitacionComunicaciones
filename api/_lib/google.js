@@ -222,4 +222,44 @@ async function crearSiNoExiste(projectId, accessToken, coleccion, id, campos) {
   throw Object.assign(new Error('No se pudo registrar el recordatorio: ' + ((j.error && j.error.message) || r.status)), { status: 500 });
 }
 
-module.exports = { enviarATodos, desdeFirestore, leerDocumento, crearSiNoExiste, APP_ID, leerCuentaServicio, firmarJWT, tokenDeAcceso, correoDeSesion, esAdministrador, listarDispositivos, borrarDocumento, enviarPush };
+// Convierte un valor normal de JavaScript al formato de Firestore REST.
+function aFirestore(v) {
+  if (v === null || v === undefined) return { nullValue: null };
+  if (typeof v === 'boolean') return { booleanValue: v };
+  if (typeof v === 'number') return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+  if (typeof v === 'string') return { stringValue: v };
+  if (Array.isArray(v)) return { arrayValue: v.length ? { values: v.map(aFirestore) } : {} };
+  if (typeof v === 'object') { const fields = {}; for (const [k, x] of Object.entries(v)) if (x !== undefined) fields[k] = aFirestore(x); return { mapValue: { fields } }; }
+  return { stringValue: String(v) };
+}
+
+// Lee un documento junto con su versión (updateTime). Si no existe devuelve { data: null, version: null }.
+async function leerConVersion(projectId, accessToken, ruta) {
+  const r = await fetch(baseDocs(projectId) + '/' + ruta, { headers: { Authorization: 'Bearer ' + accessToken } });
+  if (r.status === 404) return { data: null, version: null };
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error('No se pudo leer ' + ruta + ': ' + ((j.error && j.error.message) || r.status)), { status: 500 });
+  return { data: desdeFirestore({ mapValue: { fields: j.fields || {} } }), version: j.updateTime };
+}
+
+// Modifica un documento de forma segura: si alguien más lo cambió entre la lectura y la escritura, se vuelve a intentar.
+// cambio(datosActuales) devuelve los datos nuevos completos (o lanza un error con status para abortar).
+async function modificarDocumento(projectId, accessToken, ruta, cambio, intentos = 5) {
+  for (let i = 0; i < intentos; i++) {
+    const { data, version } = await leerConVersion(projectId, accessToken, ruta);
+    const nuevo = await cambio(data);
+    const cond = version ? 'currentDocument.updateTime=' + encodeURIComponent(version) : 'currentDocument.exists=false';
+    const r = await fetch(baseDocs(projectId) + '/' + ruta + '?' + cond, {
+      method: 'PATCH', headers: { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: aFirestore(nuevo).mapValue.fields })
+    });
+    if (r.ok) return nuevo;
+    const j = await r.json().catch(() => ({}));
+    const st = (j.error && j.error.status) || '';
+    if (r.status === 409 || st === 'FAILED_PRECONDITION' || st === 'ABORTED' || st === 'ALREADY_EXISTS' || st === 'NOT_FOUND') continue; // otro lo cambió: reintentar
+    throw Object.assign(new Error('No se pudo guardar ' + ruta + ': ' + ((j.error && j.error.message) || r.status)), { status: 500 });
+  }
+  throw Object.assign(new Error('Hay muchos cambios al mismo tiempo. Inténtalo de nuevo en unos segundos.'), { status: 503 });
+}
+
+module.exports = { aFirestore, leerConVersion, modificarDocumento, enviarATodos, desdeFirestore, leerDocumento, crearSiNoExiste, APP_ID, leerCuentaServicio, firmarJWT, tokenDeAcceso, correoDeSesion, esAdministrador, listarDispositivos, borrarDocumento, enviarPush };

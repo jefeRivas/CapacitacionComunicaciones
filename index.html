@@ -160,6 +160,35 @@
             #bottom-nav, #more-sheet, .nav-strip, .db-status { display: none !important; }
         }
 
+        /* Inventario */
+        .inv-lbl { display: block; font-size: .7rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .03em; margin-bottom: .25rem; }
+        .inv-in { width: 100%; border: 1px solid #cbd5e1; background: #fff; border-radius: .6rem; padding: .55rem .7rem; font-size: 1rem; outline: none; }
+        @media (min-width: 640px) { .inv-in { font-size: .9rem; } }
+        .inv-in:focus { box-shadow: 0 0 0 2px #fb923c; border-color: #fb923c; }
+        .inv-estado-op span { display: flex; align-items: center; justify-content: center; gap: .4rem; padding: .6rem .3rem; border-radius: .75rem; border: 2px solid #e2e8f0; background: #fff; font-weight: 800; font-size: .85rem; color: #64748b; cursor: pointer; text-align: center; }
+        .inv-estado-op input:checked + span { color: #fff; }
+        .inv-estado-op input[value="bueno"]:checked + span { background: #059669; border-color: #059669; }
+        .inv-estado-op input[value="novedad"]:checked + span { background: #f59e0b; border-color: #f59e0b; }
+        .inv-estado-op input[value="malo"]:checked + span { background: #dc2626; border-color: #dc2626; }
+        .inv-chip { border-radius: 1rem; padding: .65rem .8rem; border: 2px solid transparent; text-align: left; transition: transform .1s; }
+        .inv-chip:active { transform: scale(.97); }
+        .inv-chip.sel { border-color: #1e293b; }
+        .inv-switch { position: relative; width: 2.6rem; height: 1.5rem; border-radius: 9999px; background: #cbd5e1; transition: background .2s; flex-shrink: 0; }
+        .inv-switch::after { content: ''; position: absolute; top: .2rem; left: .2rem; width: 1.1rem; height: 1.1rem; border-radius: 9999px; background: #fff; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+        .inv-switch.on { background: #0284c7; }
+        .inv-switch.on::after { left: 1.3rem; }
+        #inv-print { display: none; }
+        @media print {
+            body.imprimiendo-inv > *:not(#inv-print) { display: none !important; }
+            body.imprimiendo-inv #inv-print { display: block !important; }
+            body.imprimiendo-inv { background: #fff !important; }
+        }
+        #inv-print { font-family: 'Nunito', Arial, sans-serif; color: #1e293b; }
+        #inv-print table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }
+        #inv-print th { background: #ffedd5; color: #9a3412; padding: 4px 5px; border: 1px solid #fed7aa; text-align: left; font-size: 9px; text-transform: none; letter-spacing: 0; }
+        #inv-print td { padding: 4px 5px; border: 1px solid #e2e8f0; vertical-align: top; color: #1e293b; overflow-wrap: anywhere; }
+        @page { margin: 12mm; }
+
         @media print {
             header, footer, .no-print { display: none !important; }
             .tab-content { display: block !important; }
@@ -226,6 +255,9 @@
             </button>
             <button onclick="openTab('problemas')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="problemas">
                 <i class="fa-solid fa-screwdriver-wrench mr-1"></i> Problemas
+            </button>
+            <button onclick="openTab('inventario')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-slate-500 border-b-4 border-transparent hover:text-orange-600 hover:bg-orange-50 transition-colors whitespace-nowrap" data-target="inventario">
+                <i class="fa-solid fa-boxes-stacked mr-1"></i> Inventario
             </button>
             <button onclick="openTab('evaluacion')" class="tab-btn px-4 py-3 text-sm sm:text-base font-bold text-emerald-600 border-b-4 border-transparent hover:text-emerald-700 hover:bg-emerald-50 transition-colors whitespace-nowrap" data-target="evaluacion">
                 <i class="fa-solid fa-graduation-cap mr-1"></i> Evaluación
@@ -831,6 +863,43 @@
             </div>
         </div>
 
+        <!-- ===================== Tab: Inventario ===================== -->
+        <div id="inventario" class="tab-content">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <h2 class="text-3xl font-extrabold text-orange-800 flex items-center gap-3"><i class="fa-solid fa-boxes-stacked text-orange-500"></i> Inventario</h2>
+                <button id="inv-login-btn" onclick="loginInventario()" class="text-sm font-bold text-slate-500 hover:text-orange-700"><i class="fa-solid fa-lock mr-1"></i><span class="underline">Administrar</span></button>
+            </div>
+            <p class="text-slate-600 mb-4">Equipos del ministerio y su estado. Si algo no funciona bien, toca <strong>Reportar novedad</strong> en el equipo.</p>
+
+            <div id="inv-admin-bar" class="hidden bg-slate-800 text-white rounded-2xl p-3 sm:p-4 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wide text-slate-300 mr-1"><i class="fa-solid fa-user-shield mr-1 text-orange-400"></i>Administrador</span>
+                    <button onclick="abrirEquipoInv()" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 font-bold text-sm"><i class="fa-solid fa-plus"></i> Agregar equipo</button>
+                    <button onclick="exportarInventarioExcel()" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-bold text-sm"><i class="fa-solid fa-file-excel"></i> Excel</button>
+                    <button onclick="imprimirInventario()" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 font-bold text-sm"><i class="fa-solid fa-file-pdf"></i> PDF / Imprimir</button>
+                    <button onclick="logoutAdmin()" class="ml-auto text-xs font-bold text-slate-300 hover:text-white underline">Cerrar sesión</button>
+                </div>
+                <div id="inv-avisos" class="hidden mt-3 text-xs text-slate-300 flex flex-wrap items-center gap-2"></div>
+            </div>
+
+            <div id="inv-resumen" class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4"></div>
+
+            <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="search" id="inv-buscar" placeholder="Buscar (nombre, código, marca, referencia...)" class="w-full border border-orange-200 bg-white rounded-full pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                </div>
+                <div class="grid grid-cols-3 gap-2 sm:flex">
+                    <select id="inv-f-estado" class="border border-orange-200 bg-white rounded-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"><option value="">Estado</option><option value="bueno">Bueno</option><option value="novedad">Con novedad</option><option value="malo">Malo</option></select>
+                    <select id="inv-f-categoria" class="border border-orange-200 bg-white rounded-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"><option value="">Categoría</option></select>
+                    <select id="inv-f-uso" class="border border-orange-200 bg-white rounded-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"><option value="">Uso</option><option value="si">En uso</option><option value="no">Sin usar</option></select>
+                </div>
+            </div>
+
+            <div id="inv-lista" class="grid gap-3 md:grid-cols-2"></div>
+            <p id="inv-vacio" class="hidden text-center text-slate-500 py-8"></p>
+        </div>
+
         <!-- ===================== Tab: Evaluación ===================== -->
         <div id="evaluacion" class="tab-content">
             <div class="max-w-3xl mx-auto">
@@ -921,6 +990,94 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Modal: Agregar / editar equipo del inventario -->
+    <div id="inv-equipo-modal" class="modal-overlay fixed inset-0 z-[105] items-center justify-center p-3 sm:p-6 bg-slate-900/70" role="dialog" aria-labelledby="inv-equipo-titulo">
+        <form id="inv-equipo-form" class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[94vh] flex flex-col" onsubmit="return false;">
+            <div class="bg-slate-800 text-white px-5 py-4 rounded-t-2xl flex justify-between items-center">
+                <h2 id="inv-equipo-titulo" class="text-lg font-bold"><i class="fa-solid fa-box text-orange-400 mr-2"></i>Equipo</h2>
+                <button type="button" onclick="cerrarModalInv('inv-equipo-modal')" class="text-slate-300 hover:text-white text-xl" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4 bg-slate-50">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="sm:col-span-2"><label class="inv-lbl">Nombre *</label><input id="inv-nombre" maxlength="80" class="inv-in font-semibold" placeholder="Ej. Cámara Sony"></div>
+                    <div><label class="inv-lbl">Código</label><input id="inv-codigo" maxlength="20" class="inv-in uppercase" placeholder="Ej. CAM-01"></div>
+                    <div><label class="inv-lbl">Categoría</label><select id="inv-categoria" class="inv-in"></select></div>
+                    <div><label class="inv-lbl">Marca</label><input id="inv-marca" maxlength="60" class="inv-in" placeholder="Ej. Sony"></div>
+                    <div><label class="inv-lbl">Referencia</label><input id="inv-referencia" maxlength="60" class="inv-in" placeholder="Ej. HXR-NX100"></div>
+                    <div><label class="inv-lbl">N.º de serie <span class="normal-case font-normal">(opcional)</span></label><input id="inv-serie" maxlength="60" class="inv-in"></div>
+                    <div><label class="inv-lbl">Ubicación</label><input id="inv-ubicacion" maxlength="60" class="inv-in" list="inv-ubicaciones" placeholder="Ej. Cabina"><datalist id="inv-ubicaciones"></datalist></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="inv-lbl">Cantidad</label><input id="inv-cantidad" type="number" min="1" max="9999" class="inv-in" value="1"></div>
+                        <div><label class="inv-lbl">Ingreso</label><input id="inv-fecha" type="date" class="inv-in"></div>
+                    </div>
+                </div>
+                <div>
+                    <label class="inv-lbl">Estado</label>
+                    <div class="grid grid-cols-3 gap-2" id="inv-estado-opciones">
+                        <label class="inv-estado-op"><input type="radio" name="inv-estado" value="bueno" class="sr-only"><span><i class="fa-solid fa-circle-check"></i> Bueno</span></label>
+                        <label class="inv-estado-op"><input type="radio" name="inv-estado" value="novedad" class="sr-only"><span><i class="fa-solid fa-triangle-exclamation"></i> Con novedad</span></label>
+                        <label class="inv-estado-op"><input type="radio" name="inv-estado" value="malo" class="sr-only"><span><i class="fa-solid fa-circle-xmark"></i> Malo</span></label>
+                    </div>
+                </div>
+                <label class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3 cursor-pointer">
+                    <input type="checkbox" id="inv-enuso" class="w-5 h-5 accent-sky-600">
+                    <span><span class="font-bold text-slate-700">En uso</span><span class="block text-xs text-slate-500">Está activo en el montaje habitual (no guardado en bodega).</span></span>
+                </label>
+                <div><label class="inv-lbl">Observaciones</label><textarea id="inv-observaciones" rows="3" maxlength="500" class="inv-in" placeholder="Ej. Incluye estuche y 2 baterías"></textarea></div>
+            </div>
+            <div class="px-5 py-4 border-t border-slate-200 flex justify-end gap-3 bg-white rounded-b-2xl">
+                <button type="button" onclick="cerrarModalInv('inv-equipo-modal')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
+                <button type="submit" id="inv-guardar-btn" onclick="guardarEquipoInv()" class="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal: Reportar novedad de un equipo -->
+    <div id="inv-reporte-modal" class="modal-overlay fixed inset-0 z-[105] items-center justify-center p-3 sm:p-6 bg-slate-900/70" role="dialog">
+        <form class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[94vh] flex flex-col" onsubmit="return false;">
+            <div class="bg-amber-500 text-white px-5 py-4 rounded-t-2xl flex justify-between items-center">
+                <h2 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Reportar novedad</h2>
+                <button type="button" onclick="cerrarModalInv('inv-reporte-modal')" class="text-white/80 hover:text-white text-xl" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4">
+                <p id="inv-rep-equipo" class="font-bold text-slate-800"></p>
+                <div>
+                    <label class="inv-lbl">Tu nombre</label>
+                    <select id="inv-rep-autor" class="inv-in"></select>
+                    <input id="inv-rep-autor-otro" maxlength="60" class="inv-in mt-2 hidden" placeholder="Escribe tu nombre">
+                </div>
+                <div><label class="inv-lbl">¿Qué novedad tiene?</label><textarea id="inv-rep-texto" rows="3" maxlength="300" class="inv-in" placeholder="Ej. El cargador no sirve"></textarea></div>
+                <div><label class="inv-lbl">Código del grupo</label><input id="inv-rep-codigo" maxlength="12" autocomplete="off" class="inv-in" placeholder="Te lo comparte el líder del equipo"></div>
+            </div>
+            <div class="px-5 py-4 border-t border-slate-200 flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalInv('inv-reporte-modal')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
+                <button type="submit" id="inv-rep-btn" onclick="enviarReporteInv()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl"><i class="fa-solid fa-paper-plane mr-2"></i>Enviar reporte</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal: Resolver una novedad (administrador) -->
+    <div id="inv-resolver-modal" class="modal-overlay fixed inset-0 z-[105] items-center justify-center p-3 sm:p-6 bg-slate-900/70" role="dialog">
+        <form class="modal-card bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[94vh] flex flex-col" onsubmit="return false;">
+            <div class="bg-emerald-600 text-white px-5 py-4 rounded-t-2xl flex justify-between items-center">
+                <h2 class="text-lg font-bold"><i class="fa-solid fa-circle-check mr-2"></i>Marcar como resuelta</h2>
+                <button type="button" onclick="cerrarModalInv('inv-resolver-modal')" class="text-white/80 hover:text-white text-xl" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-4">
+                <div id="inv-res-detalle" class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-slate-700"></div>
+                <div><label class="inv-lbl">Nota (opcional)</label><textarea id="inv-res-nota" rows="2" maxlength="300" class="inv-in" placeholder="Ej. Se compró cargador nuevo"></textarea></div>
+                <div><label class="inv-lbl">Estado del equipo después</label>
+                    <select id="inv-res-estado" class="inv-in"><option value="bueno">Bueno</option><option value="novedad">Con novedad</option><option value="malo">Malo</option></select>
+                    <p id="inv-res-aviso" class="hidden text-xs text-amber-700 mt-1"></p>
+                </div>
+            </div>
+            <div class="px-5 py-4 border-t border-slate-200 flex justify-end gap-3">
+                <button type="button" onclick="cerrarModalInv('inv-resolver-modal')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl">Cancelar</button>
+                <button type="submit" id="inv-res-btn" onclick="confirmarResolverInv()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl"><i class="fa-solid fa-check mr-2"></i>Resuelta</button>
+            </div>
+        </form>
     </div>
 
     <!-- Modal: Inicio de sesión de administrador (Firebase Auth) -->
@@ -1017,6 +1174,15 @@
                     <!-- Solo móvil: botón al final de la lista para no tener que subir -->
                     <button onclick="addMember()" class="sm:hidden w-full mt-3 py-3 border-2 border-dashed border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 font-bold rounded-xl transition-colors"><i class="fa-solid fa-user-plus mr-2"></i> Agregar miembro</button>
                 </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-slate-700 mb-1"><i class="fa-solid fa-key text-orange-500 mr-1"></i> Código para reportar novedades del inventario</h3>
+                    <p class="text-xs text-slate-500 mb-2">Los miembros lo escriben al reportar una novedad de un equipo. Compártelo con el grupo (por ejemplo, por WhatsApp). Por seguridad no se muestra el código actual: escribe uno nuevo para cambiarlo. Se guarda al instante, sin necesidad de «Guardar Cambios».</p>
+                    <p id="cfg-inv-codigo-estado" class="text-xs font-bold text-slate-500 mb-2"></p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input id="cfg-inv-codigo" maxlength="12" autocomplete="off" placeholder="Nuevo código (4 a 12 letras o números)" class="flex-1 border border-slate-300 p-2 rounded text-base sm:text-sm focus:ring-1 focus:ring-orange-500 outline-none">
+                        <button type="button" id="cfg-inv-codigo-btn" onclick="guardarCodigoInventario()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm"><i class="fa-solid fa-floppy-disk mr-1"></i> Guardar código</button>
+                    </div>
+                </div>
               </div>
 
               <!-- Pestaña Problemas -->
@@ -1091,6 +1257,7 @@
                 <button class="more-tile" data-target="transmision" onclick="openTab('transmision'); closeMore()"><i class="fa-solid fa-satellite-dish"></i>Transmisión</button>
                 <button class="more-tile" data-target="sonido" onclick="openTab('sonido'); closeMore()"><i class="fa-solid fa-sliders"></i>Sonido</button>
                 <button class="more-tile" data-target="esquema" onclick="openTab('esquema'); closeMore()"><i class="fa-solid fa-network-wired"></i>Esquema</button>
+                <button class="more-tile" data-target="inventario" onclick="openTab('inventario'); closeMore()"><i class="fa-solid fa-boxes-stacked"></i>Inventario</button>
                 <button class="more-tile eval" data-target="evaluacion" onclick="openTab('evaluacion'); closeMore()"><i class="fa-solid fa-graduation-cap"></i>Evaluación</button>
             </div>
         </div>
@@ -1253,6 +1420,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Vista de impresión del inventario (PDF) -->
+    <div id="inv-print"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -1459,6 +1629,9 @@
             ]
         };
 
+        function aperturaInicial() {
+            if (new URLSearchParams(location.search).has('inventario')) window.openTab('inventario'); else openWeekly();
+        }
         async function initApp() {
             let initialRenderDone = false;
             if (!auth || !db) {
@@ -1469,7 +1642,7 @@
             }
             try {
                 // La lectura es pública (según las reglas); solo se inicia sesión para administrar.
-                onAuthStateChanged(auth, (user) => { currentUser = user; updateLogoutBtn(); });
+                onAuthStateChanged(auth, (user) => { currentUser = user; updateLogoutBtn(); renderInventario(); refrescarAvisosInv(); });
                 setTimeout(() => { if (!dbListo()) { dbSlow = true; dbMostrarEstado('Los datos guardados están tardando en cargar. ' + dbDiagnostico(dbErrorCode)); } }, 8000);
 
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'semana');
@@ -1478,13 +1651,13 @@
                     if (dbListo()) dbMostrarEstado('');
                     if (docSnap.exists()) { semanaInfo = docSnap.data(); }
                     renderWeekly();
-                    if (!initialRenderDone) { openWeekly(); initialRenderDone = true; }
+                    if (!initialRenderDone) { aperturaInicial(); initialRenderDone = true; }
                 }, (error) => {
                     console.error("Error escuchando datos:", error);
                     dbErrorCode = error && error.code; dbMostrarEstado('No se pudieron cargar los datos guardados. ' + dbDiagnostico(dbErrorCode));
                     loadLocalData();
                     renderWeekly();
-                    if (!initialRenderDone) { openWeekly(); initialRenderDone = true; }
+                    if (!initialRenderDone) { aperturaInicial(); initialRenderDone = true; }
                 });
 
                 const equipoRef = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'equipo');
@@ -1497,6 +1670,10 @@
                         if (Array.isArray(d.problemas)) { problemasInfo = d.problemas; renderProblemas(); }
                     }
                 }, (error) => { console.error("Error escuchando equipo:", error); dbErrorCode = error && error.code; dbMostrarEstado('No se pudieron cargar los datos guardados. ' + dbDiagnostico(dbErrorCode)); loadLocalData(); renderProblemas(); });
+                // Inventario: lectura en vivo (todos pueden verlo)
+                onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'config', 'inventario'), (snap) => {
+                    inventario = normalizarInventario(snap.exists() ? snap.data() : null); invEstadoCarga = 'ok'; renderInventario();
+                }, (error) => { console.error('Error escuchando inventario:', error); invEstadoCarga = 'error'; renderInventario(); });
             } catch (e) {
                 console.error("Error Firebase:", e);
                 loadLocalData();
@@ -1552,7 +1729,7 @@
                 errBox.classList.add('hidden');
                 document.getElementById('admin-pass-input').value = '';
                 window.closePasswordPrompt();
-                if (pendingAfterLogin === 'aportes') window.openAportes(); else window.openAdminModal();
+                if (pendingAfterLogin === 'aportes') window.openAportes(); else if (pendingAfterLogin === 'inventario') { renderInventario(); refrescarAvisosInv(); } else window.openAdminModal();
             } catch (e) {
                 const msgs = {
                     'auth/invalid-credential': 'Correo o contraseña incorrectos.',
@@ -2613,6 +2790,7 @@
 
             document.getElementById('cfg-notas-container').innerHTML = '';
             semanaInfo.notas.forEach((n, nIdx) => appendCfgNoteUI(n.texto, n.conIcono, nIdx));
+            actualizarEstadoCodigoInv();
         }
 
         // ---- Días de servicio y disponibilidad de cada miembro ----
@@ -3042,7 +3220,7 @@
         }
 
         // ================= TABS Y SWIPE =================
-        const tabsOrder = ['inicio', 'camaras', 'textos', 'transmision', 'sonido', 'esquema', 'checklist', 'problemas', 'evaluacion'];
+        const tabsOrder = ['inicio', 'camaras', 'textos', 'transmision', 'sonido', 'esquema', 'checklist', 'problemas', 'inventario', 'evaluacion'];
         function handleOpenTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -3468,6 +3646,383 @@
 
         showLastQuiz();
 
+        // ================= INVENTARIO DE EQUIPOS =================
+        // Todos ven el inventario en vivo (config/inventario). Los cambios pasan por /api/inventario:
+        // el administrador con su sesión y los miembros (solo para reportar) con el código del grupo.
+        const INV_CATEGORIAS = [
+            { n: 'Cámaras', p: 'CAM', i: 'fa-video' }, { n: 'Audio / Micrófonos', p: 'MIC', i: 'fa-microphone' },
+            { n: 'Cómputo', p: 'PC', i: 'fa-desktop' }, { n: 'Energía / Plantas', p: 'ENE', i: 'fa-plug' },
+            { n: 'Cables', p: 'CAB', i: 'fa-ethernet' }, { n: 'Iluminación', p: 'LUZ', i: 'fa-lightbulb' },
+            { n: 'Accesorios', p: 'ACC', i: 'fa-toolbox' }, { n: 'Otros', p: 'OTR', i: 'fa-box' }
+        ];
+        const INV_ESTADOS = {
+            bueno: { l: 'Bueno', i: 'fa-circle-check', badge: 'bg-emerald-100 text-emerald-700', chip: 'bg-emerald-50 text-emerald-800', borde: 'border-emerald-200' },
+            novedad: { l: 'Con novedad', i: 'fa-triangle-exclamation', badge: 'bg-amber-100 text-amber-700', chip: 'bg-amber-50 text-amber-800', borde: 'border-amber-300' },
+            malo: { l: 'Malo', i: 'fa-circle-xmark', badge: 'bg-red-100 text-red-700', chip: 'bg-red-50 text-red-800', borde: 'border-red-300' }
+        };
+        let inventario = { equipos: [], reportes: [] }, invEstadoCarga = 'cargando', invFiltroEstado = '';
+        let invEditando = null, invReportando = null, invResolviendo = null, invCodigoAuto = '';
+        function normalizarInventario(d) {
+            return { equipos: Array.isArray(d && d.equipos) ? d.equipos : [], reportes: Array.isArray(d && d.reportes) ? d.reportes : [] };
+        }
+        const esAdminInv = () => !!(currentUser || (auth && auth.currentUser));
+        const catDe = (n) => INV_CATEGORIAS.find(c => c.n === n) || INV_CATEGORIAS[INV_CATEGORIAS.length - 1];
+        const fechaCorta = (iso) => { if (!iso) return ''; const [y, m, d] = iso.split('-'); return `${d}/${m}/${y}`; };
+        const fechaHora = (ms) => new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(ms)).replace(/\s+/g, ' ');
+        window.cerrarModalInv = (id) => { document.getElementById(id).classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
+        const abrirModalInv = (id) => { document.getElementById(id).classList.add('open'); document.body.classList.add('overflow-hidden'); };
+
+        async function apiInventario(accion, datos = {}, conSesion = false) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (conSesion) {
+                const u = auth && auth.currentUser;
+                if (!u) throw new Error('Inicia sesión como administrador.');
+                headers.Authorization = 'Bearer ' + await u.getIdToken();
+            }
+            let r;
+            try { r = await fetch('/api/inventario', { method: 'POST', headers, body: JSON.stringify({ accion, ...datos }) }); }
+            catch (e) { throw new Error('Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.'); }
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(j.error || ('Error ' + r.status));
+            return j;
+        }
+        async function conBoton(btn, fn) {
+            const orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Un momento…';
+            try { return await fn(); } finally { btn.disabled = false; btn.innerHTML = orig; }
+        }
+
+        window.loginInventario = () => {
+            if (!auth || !db) { showAlert('No disponible', 'La administración del inventario necesita la conexión con Firebase.', true); return; }
+            if (esAdminInv()) { renderInventario(); return; }
+            pendingAfterLogin = 'inventario';
+            document.getElementById('admin-pass-input').value = '';
+            document.getElementById('admin-pass-error').classList.add('hidden');
+            document.getElementById('password-modal').classList.add('open');
+            document.getElementById('admin-email-input').focus();
+        };
+
+        function equiposFiltrados() {
+            const q = sinTildes(document.getElementById('inv-buscar').value.trim());
+            const fe = invFiltroEstado || document.getElementById('inv-f-estado').value;
+            const fc = document.getElementById('inv-f-categoria').value, fu = document.getElementById('inv-f-uso').value;
+            return inventario.equipos.filter(e => {
+                if (fe && e.estado !== fe) return false;
+                if (fc && (e.categoria || 'Otros') !== fc) return false;
+                if (fu && !!e.enUso !== (fu === 'si')) return false;
+                if (q && !sinTildes([e.codigo, e.nombre, e.marca, e.referencia, e.serie, e.ubicacion, e.categoria, e.observaciones].join(' ')).includes(q)) return false;
+                return true;
+            }).sort((a, b) => {
+                const orden = { malo: 0, novedad: 1, bueno: 2 };
+                return (orden[a.estado] - orden[b.estado]) || String(a.codigo || a.nombre).localeCompare(String(b.codigo || b.nombre), 'es', { numeric: true });
+            });
+        }
+
+        function renderInventario() {
+            const lista = document.getElementById('inv-lista'); if (!lista) return;
+            const admin = esAdminInv();
+            document.getElementById('inv-admin-bar').classList.toggle('hidden', !admin);
+            document.getElementById('inv-login-btn').classList.toggle('hidden', admin);
+
+            // Resumen (los recuadros también sirven de filtro)
+            const eqs = inventario.equipos;
+            const cuenta = (f) => eqs.filter(f).length;
+            const chips = [
+                { k: '', l: 'Equipos', n: eqs.length, c: 'bg-white text-slate-800 border-slate-200', i: 'fa-boxes-stacked' },
+                { k: 'bueno', l: 'Bueno', n: cuenta(e => e.estado === 'bueno'), c: INV_ESTADOS.bueno.chip, i: INV_ESTADOS.bueno.i },
+                { k: 'novedad', l: 'Con novedad', n: cuenta(e => e.estado === 'novedad'), c: INV_ESTADOS.novedad.chip, i: INV_ESTADOS.novedad.i },
+                { k: 'malo', l: 'Malo', n: cuenta(e => e.estado === 'malo'), c: INV_ESTADOS.malo.chip, i: INV_ESTADOS.malo.i },
+                { k: 'uso', l: 'En uso', n: cuenta(e => e.enUso), c: 'bg-sky-50 text-sky-800', i: 'fa-plug-circle-check' }
+            ];
+            const fuso = document.getElementById('inv-f-uso').value;
+            document.getElementById('inv-resumen').innerHTML = chips.map((c, idx) => `<button type="button" data-chip="${c.k}" class="inv-chip ${c.c} ${idx === 0 ? 'col-span-2 sm:col-span-1' : ''} ${(c.k === 'uso' ? fuso === 'si' : (c.k && invFiltroEstado === c.k)) ? 'sel' : ''}">
+                <div class="text-xs font-bold opacity-80"><i class="fa-solid ${c.i} mr-1"></i>${c.l}</div><div class="text-2xl font-extrabold leading-tight">${c.n}</div></button>`).join('');
+            document.querySelectorAll('#inv-resumen [data-chip]').forEach(b => b.addEventListener('click', () => {
+                const k = b.dataset.chip;
+                if (k === 'uso') { const f = document.getElementById('inv-f-uso'); f.value = f.value === 'si' ? '' : 'si'; }
+                else if (!k) { invFiltroEstado = ''; ['inv-f-estado', 'inv-f-categoria', 'inv-f-uso'].forEach(id => document.getElementById(id).value = ''); document.getElementById('inv-buscar').value = ''; }
+                else { invFiltroEstado = invFiltroEstado === k ? '' : k; document.getElementById('inv-f-estado').value = invFiltroEstado; }
+                renderInventario();
+            }));
+
+            // Categorías presentes para el filtro
+            const selCat = document.getElementById('inv-f-categoria'), catActual = selCat.value;
+            const cats = [...new Set(eqs.map(e => e.categoria || 'Otros'))].sort((a, b) => INV_CATEGORIAS.findIndex(c => c.n === a) - INV_CATEGORIAS.findIndex(c => c.n === b));
+            selCat.innerHTML = '<option value="">Categoría</option>' + cats.map(c => `<option ${c === catActual ? 'selected' : ''}>${esc(c)}</option>`).join('');
+
+            const vacio = document.getElementById('inv-vacio');
+            if (invEstadoCarga !== 'ok') {
+                lista.innerHTML = ''; vacio.classList.remove('hidden');
+                vacio.innerHTML = invEstadoCarga === 'error' ? '<i class="fa-solid fa-triangle-exclamation mr-1 text-amber-500"></i> No se pudo cargar el inventario. Revisa tu conexión.' : (db ? '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Cargando inventario…' : 'El inventario necesita la conexión con Firebase.');
+                return;
+            }
+            const filtrados = equiposFiltrados();
+            if (!filtrados.length) {
+                lista.innerHTML = ''; vacio.classList.remove('hidden');
+                vacio.innerHTML = eqs.length ? '<i class="fa-regular fa-face-meh mr-1"></i> Ningún equipo coincide con la búsqueda o los filtros.'
+                    : (admin ? '<i class="fa-solid fa-box-open mr-1"></i> Aún no hay equipos. Toca <strong>Agregar equipo</strong> para empezar.' : '<i class="fa-solid fa-box-open mr-1"></i> Aún no hay equipos registrados.');
+                return;
+            }
+            vacio.classList.add('hidden');
+            lista.innerHTML = filtrados.map(e => tarjetaEquipo(e, admin)).join('');
+            lista.querySelectorAll('[data-acc]').forEach(b => b.addEventListener('click', () => accionInv(b.dataset.acc, b.dataset.id, b)));
+        }
+
+        function tarjetaEquipo(e, admin) {
+            const est = INV_ESTADOS[e.estado] || INV_ESTADOS.bueno, cat = catDe(e.categoria);
+            const reps = inventario.reportes.filter(r => r.equipoId === e.id);
+            const abiertos = reps.filter(r => r.estado !== 'resuelto').sort((a, b) => b.fecha - a.fecha);
+            const resueltos = reps.filter(r => r.estado === 'resuelto').sort((a, b) => (b.resuelto || 0) - (a.resuelto || 0));
+            const detalle = [e.marca, e.referencia].filter(Boolean).map(esc).join(' · ');
+            const dato = (ic, t) => t ? `<span class="inline-flex items-center gap-1"><i class="fa-solid ${ic} text-slate-400"></i>${t}</span>` : '';
+            return `<article class="bg-white border ${est.borde} rounded-2xl p-4 shadow-sm flex flex-col gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg shrink-0"><i class="fa-solid ${cat.i}"></i></div>
+                    <div class="min-w-0 flex-1">
+                        <div class="flex flex-wrap items-center gap-x-2 text-xs font-bold text-slate-500">${e.codigo ? `<span class="bg-slate-800 text-white rounded px-1.5 py-0.5">${esc(e.codigo)}</span>` : ''}<span>${esc(e.categoria || 'Otros')}</span></div>
+                        <h3 class="font-extrabold text-slate-800 text-lg leading-tight mt-0.5">${esc(e.nombre)}${e.cantidad > 1 ? ` <span class="text-sm font-bold text-slate-500">× ${e.cantidad}</span>` : ''}</h3>
+                        ${detalle ? `<p class="text-sm text-slate-600">${detalle}</p>` : ''}
+                    </div>
+                    <span class="shrink-0 text-xs font-extrabold rounded-full px-2.5 py-1 ${est.badge}"><i class="fa-solid ${est.i} mr-1"></i>${est.l}</span>
+                </div>
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold text-slate-600">
+                    ${dato('fa-location-dot', esc(e.ubicacion))}${dato('fa-calendar-plus', e.fechaIngreso ? 'Ingreso ' + fechaCorta(e.fechaIngreso) : '')}${dato('fa-barcode', e.serie ? 'Serie ' + esc(e.serie) : '')}
+                    ${admin ? `<button type="button" data-acc="uso" data-id="${esc(e.id)}" class="inline-flex items-center gap-2 font-bold ${e.enUso ? 'text-sky-700' : 'text-slate-500'}" title="Cambiar «En uso»"><span class="inv-switch ${e.enUso ? 'on' : ''}"></span>${e.enUso ? 'En uso' : 'Sin usar'}</button>`
+                        : `<span class="inline-flex items-center gap-1 font-bold ${e.enUso ? 'text-sky-700' : 'text-slate-400'}"><i class="fa-solid ${e.enUso ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>${e.enUso ? 'En uso' : 'Sin usar'}</span>`}
+                </div>
+                ${e.observaciones ? `<p class="text-sm text-slate-600 bg-slate-50 rounded-lg px-3 py-2 whitespace-pre-line">${esc(e.observaciones)}</p>` : ''}
+                ${abiertos.length ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-2">
+                    <p class="text-xs font-extrabold uppercase text-amber-700"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Novedades abiertas (${abiertos.length})</p>
+                    ${abiertos.map(r => `<div class="text-sm text-slate-700 border-t border-amber-200/70 pt-2 first-of-type:border-0 first-of-type:pt-0">
+                        <p class="font-semibold">${esc(r.texto)}</p>
+                        <p class="text-xs text-slate-500">${esc(r.autor)} · ${fechaHora(r.fecha)}</p>
+                        ${admin ? `<div class="flex gap-2 mt-1.5"><button type="button" data-acc="resolver" data-id="${esc(r.id)}" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fa-solid fa-check mr-1"></i>Resuelta</button><button type="button" data-acc="borrarRep" data-id="${esc(r.id)}" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-white border border-slate-300 text-slate-600 hover:bg-slate-100"><i class="fa-solid fa-trash mr-1"></i>Borrar</button></div>` : ''}
+                    </div>`).join('')}
+                </div>` : ''}
+                ${resueltos.length ? `<details class="text-sm"><summary class="cursor-pointer text-xs font-bold text-slate-500 hover:text-slate-700"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Historial de novedades (${resueltos.length})</summary>
+                    <ul class="mt-2 space-y-2">${resueltos.map(r => `<li class="border-l-2 border-emerald-300 pl-3">
+                        <p class="text-slate-700">${esc(r.texto)} <span class="text-xs text-slate-400">— ${esc(r.autor)}, ${fechaHora(r.fecha)}</span></p>
+                        <p class="text-xs text-emerald-700 font-semibold"><i class="fa-solid fa-check mr-1"></i>Resuelta ${fechaHora(r.resuelto)}${r.nota ? ': ' + esc(r.nota) : ''}</p></li>`).join('')}</ul></details>` : ''}
+                <div class="flex flex-wrap gap-2 mt-auto pt-1">
+                    <button type="button" data-acc="reportar" data-id="${esc(e.id)}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-amber-300 text-amber-700 hover:bg-amber-50 font-bold text-sm"><i class="fa-solid fa-triangle-exclamation"></i> Reportar novedad</button>
+                    ${admin ? `<button type="button" data-acc="editar" data-id="${esc(e.id)}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm"><i class="fa-solid fa-pen"></i> Editar</button>
+                    <button type="button" data-acc="eliminar" data-id="${esc(e.id)}" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-red-500 hover:bg-red-50 font-bold text-sm ml-auto" title="Eliminar equipo"><i class="fa-solid fa-trash"></i></button>` : ''}
+                </div>
+            </article>`;
+        }
+
+        ['inv-buscar', 'inv-f-categoria', 'inv-f-uso'].forEach(id => document.getElementById(id).addEventListener('input', () => renderInventario()));
+        document.getElementById('inv-f-estado').addEventListener('input', (ev) => { invFiltroEstado = ev.target.value; renderInventario(); });
+        renderInventario();
+
+        async function accionInv(acc, id, btn) {
+            const eq = inventario.equipos.find(e => e.id === id);
+            try {
+                if (acc === 'reportar') return abrirReporteInv(eq);
+                if (acc === 'editar') return window.abrirEquipoInv(eq);
+                if (acc === 'eliminar') {
+                    if (!confirm(`¿Eliminar «${eq.nombre}» del inventario? También se borrarán sus novedades.`)) return;
+                    await conBoton(btn, () => apiInventario('eliminarEquipo', { id }, true));
+                    return;
+                }
+                if (acc === 'uso') { await conBoton(btn, () => apiInventario('guardarEquipo', { equipo: { ...eq, enUso: !eq.enUso } }, true)); return; }
+                if (acc === 'resolver') return abrirResolverInv(inventario.reportes.find(r => r.id === id));
+                if (acc === 'borrarRep') {
+                    if (!confirm('¿Borrar este reporte? Úsalo solo si el reporte es un error.')) return;
+                    await conBoton(btn, () => apiInventario('eliminarReporte', { reporteId: id }, true));
+                }
+            } catch (e) { showAlert('No se pudo completar', e.message, true); }
+        }
+
+        // --- Agregar / editar equipo ---
+        function siguienteCodigo(categoria) {
+            const pre = catDe(categoria).p;
+            const nums = inventario.equipos.map(e => String(e.codigo || '').toUpperCase().match(new RegExp('^' + pre + '-(\\d+)$'))).filter(Boolean).map(m => +m[1]);
+            return `${pre}-${String((nums.length ? Math.max(...nums) : 0) + 1).padStart(2, '0')}`;
+        }
+        window.abrirEquipoInv = (eq) => {
+            invEditando = eq || null;
+            const e = eq || { categoria: 'Cámaras', cantidad: 1, estado: 'bueno', enUso: true, fechaIngreso: new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }) };
+            document.getElementById('inv-equipo-titulo').innerHTML = `<i class="fa-solid fa-box text-orange-400 mr-2"></i>${eq ? 'Editar equipo' : 'Agregar equipo'}`;
+            const sel = document.getElementById('inv-categoria');
+            const cats = INV_CATEGORIAS.map(c => c.n); if (e.categoria && !cats.includes(e.categoria)) cats.push(e.categoria);
+            sel.innerHTML = cats.map(c => `<option ${c === (e.categoria || 'Otros') ? 'selected' : ''}>${esc(c)}</option>`).join('');
+            const val = (id, v) => { document.getElementById(id).value = v == null ? '' : v; };
+            val('inv-nombre', e.nombre); val('inv-marca', e.marca); val('inv-referencia', e.referencia); val('inv-serie', e.serie);
+            val('inv-ubicacion', e.ubicacion); val('inv-cantidad', e.cantidad || 1); val('inv-fecha', e.fechaIngreso); val('inv-observaciones', e.observaciones);
+            invCodigoAuto = eq ? '' : siguienteCodigo(e.categoria);
+            val('inv-codigo', eq ? e.codigo : invCodigoAuto);
+            document.querySelectorAll('input[name="inv-estado"]').forEach(r => r.checked = r.value === (e.estado || 'bueno'));
+            document.getElementById('inv-enuso').checked = !!e.enUso;
+            document.getElementById('inv-ubicaciones').innerHTML = [...new Set(inventario.equipos.map(x => x.ubicacion).filter(Boolean))].map(u => `<option value="${esc(u)}">`).join('');
+            abrirModalInv('inv-equipo-modal');
+            setTimeout(() => document.getElementById('inv-nombre').focus(), 50);
+        };
+        document.getElementById('inv-categoria').addEventListener('change', (ev) => {
+            const c = document.getElementById('inv-codigo');
+            if (!c.value.trim() || c.value === invCodigoAuto) { invCodigoAuto = siguienteCodigo(ev.target.value); c.value = invCodigoAuto; }
+        });
+        window.guardarEquipoInv = async () => {
+            const v = (id) => document.getElementById(id).value;
+            const equipo = {
+                ...(invEditando ? { id: invEditando.id } : {}),
+                nombre: v('inv-nombre').trim(), codigo: v('inv-codigo').trim(), categoria: v('inv-categoria'), marca: v('inv-marca').trim(),
+                referencia: v('inv-referencia').trim(), serie: v('inv-serie').trim(), ubicacion: v('inv-ubicacion').trim(),
+                cantidad: +v('inv-cantidad') || 1, fechaIngreso: v('inv-fecha'), observaciones: v('inv-observaciones').trim(),
+                estado: (document.querySelector('input[name="inv-estado"]:checked') || {}).value || 'bueno',
+                enUso: document.getElementById('inv-enuso').checked
+            };
+            if (!equipo.nombre) { showAlert('Falta el nombre', 'Escribe el nombre del equipo.', true); return; }
+            try {
+                await conBoton(document.getElementById('inv-guardar-btn'), () => apiInventario('guardarEquipo', { equipo }, true));
+                window.cerrarModalInv('inv-equipo-modal');
+            } catch (e) { showAlert('No se pudo guardar', e.message, true); }
+        };
+
+        // --- Reportar novedad (cualquier miembro) ---
+        const leerLS = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+        const guardarLS = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        function abrirReporteInv(eq) {
+            if (!eq) return;
+            invReportando = eq;
+            document.getElementById('inv-rep-equipo').innerHTML = `<i class="fa-solid ${catDe(eq.categoria).i} text-orange-500 mr-1"></i>${eq.codigo ? esc(eq.codigo) + ' · ' : ''}${esc(eq.nombre)}`;
+            const nombres = [...new Set((equipoInfo.miembros || []).filter(m => m.activo && String(m.nombre || '').trim()).map(m => m.nombre.trim()))].sort((a, b) => a.localeCompare(b, 'es'));
+            const guardado = leerLS('inv_autor');
+            const sel = document.getElementById('inv-rep-autor'), otro = document.getElementById('inv-rep-autor-otro');
+            sel.innerHTML = '<option value="">— Elige tu nombre —</option>' + nombres.map(n => `<option ${n === guardado ? 'selected' : ''}>${esc(n)}</option>`).join('') + '<option value="__otro">Otra persona…</option>';
+            if (guardado && !nombres.includes(guardado)) { sel.value = '__otro'; otro.value = guardado; } else otro.value = '';
+            otro.classList.toggle('hidden', sel.value !== '__otro');
+            document.getElementById('inv-rep-texto').value = '';
+            document.getElementById('inv-rep-codigo').value = leerLS('inv_codigo');
+            abrirModalInv('inv-reporte-modal');
+        }
+        document.getElementById('inv-rep-autor').addEventListener('change', (ev) => {
+            const otro = document.getElementById('inv-rep-autor-otro');
+            otro.classList.toggle('hidden', ev.target.value !== '__otro'); if (ev.target.value === '__otro') otro.focus();
+        });
+        window.enviarReporteInv = async () => {
+            const sel = document.getElementById('inv-rep-autor').value;
+            const autor = (sel === '__otro' ? document.getElementById('inv-rep-autor-otro').value : sel).trim();
+            const texto = document.getElementById('inv-rep-texto').value.trim(), codigo = document.getElementById('inv-rep-codigo').value.trim();
+            if (autor.length < 2) { showAlert('Falta tu nombre', 'Elige tu nombre de la lista (o escríbelo).', true); return; }
+            if (texto.length < 3) { showAlert('Falta la novedad', 'Describe qué le pasa al equipo.', true); return; }
+            if (!codigo) { showAlert('Falta el código', 'Escribe el código del grupo. Si no lo tienes, pídeselo al líder del equipo.', true); return; }
+            try {
+                await conBoton(document.getElementById('inv-rep-btn'), () => apiInventario('reportar', { equipoId: invReportando.id, autor, texto, codigo }));
+                guardarLS('inv_autor', autor); guardarLS('inv_codigo', codigo);
+                window.cerrarModalInv('inv-reporte-modal');
+                showAlert('¡Reporte enviado!', `Gracias, ${autor}. La novedad de «${invReportando.nombre}» quedó registrada y el administrador fue avisado.`);
+            } catch (e) {
+                if (/código/i.test(e.message)) guardarLS('inv_codigo', '');
+                showAlert('No se pudo enviar', e.message, true);
+            }
+        };
+
+        // --- Resolver novedad (administrador) ---
+        function abrirResolverInv(rep) {
+            if (!rep) return;
+            invResolviendo = rep;
+            const eq = inventario.equipos.find(e => e.id === rep.equipoId) || {};
+            const otrosAbiertos = inventario.reportes.filter(r => r.equipoId === rep.equipoId && r.estado !== 'resuelto' && r.id !== rep.id).length;
+            document.getElementById('inv-res-detalle').innerHTML = `<p class="font-bold">${esc(eq.nombre || '')}</p><p>${esc(rep.texto)}</p><p class="text-xs text-slate-500 mt-1">${esc(rep.autor)} · ${fechaHora(rep.fecha)}</p>`;
+            document.getElementById('inv-res-nota').value = '';
+            document.getElementById('inv-res-estado').value = otrosAbiertos ? 'novedad' : (eq.estado === 'malo' ? 'malo' : 'bueno');
+            const aviso = document.getElementById('inv-res-aviso');
+            aviso.classList.toggle('hidden', !otrosAbiertos);
+            aviso.textContent = otrosAbiertos ? `Este equipo tiene ${otrosAbiertos} novedad(es) abierta(s) más.` : '';
+            abrirModalInv('inv-resolver-modal');
+        }
+        window.confirmarResolverInv = async () => {
+            try {
+                await conBoton(document.getElementById('inv-res-btn'), () => apiInventario('resolverReporte', {
+                    reporteId: invResolviendo.id, nota: document.getElementById('inv-res-nota').value.trim(), estadoFinal: document.getElementById('inv-res-estado').value
+                }, true));
+                window.cerrarModalInv('inv-resolver-modal');
+            } catch (e) { showAlert('No se pudo guardar', e.message, true); }
+        };
+
+        // --- Código del grupo (Configurar → Equipo) ---
+        async function actualizarEstadoCodigoInv() {
+            const p = document.getElementById('cfg-inv-codigo-estado'); if (!p) return;
+            if (!esAdminInv()) { p.textContent = ''; return; }
+            p.className = 'text-xs font-bold text-slate-500 mb-2'; p.textContent = 'Consultando…';
+            try {
+                const r = await apiInventario('estado', { dispositivoId: pushIdGuardado() }, true);
+                p.className = 'text-xs font-bold mb-2 ' + (r.codigoDefinido ? 'text-emerald-700' : 'text-amber-700');
+                p.innerHTML = r.codigoDefinido ? '<i class="fa-solid fa-circle-check mr-1"></i>Hay un código definido.' : '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Aún no hay código: los miembros no pueden reportar hasta que lo definas.';
+            } catch (e) { p.className = 'text-xs font-bold text-slate-400 mb-2'; p.textContent = 'No se pudo consultar el código (' + e.message + ')'; }
+        }
+        window.guardarCodigoInventario = async () => {
+            const codigo = document.getElementById('cfg-inv-codigo').value.trim();
+            if (!/^[A-Za-z0-9]{4,12}$/.test(codigo)) { showAlert('Código no válido', 'El código debe tener entre 4 y 12 letras o números, sin espacios.', true); return; }
+            try {
+                await conBoton(document.getElementById('cfg-inv-codigo-btn'), () => apiInventario('cambiarCodigo', { codigo }, true));
+                document.getElementById('cfg-inv-codigo').value = '';
+                actualizarEstadoCodigoInv();
+                showAlert('Código guardado', `El nuevo código para reportar novedades es «${codigo}». Compártelo con el grupo; el anterior deja de funcionar.`);
+            } catch (e) { showAlert('No se pudo guardar el código', e.message, true); }
+        };
+
+        // --- Avisos de nuevos reportes en el celular del administrador ---
+        async function refrescarAvisosInv() {
+            const box = document.getElementById('inv-avisos'); if (!box) return;
+            if (!esAdminInv() || !pushVapid) { box.classList.add('hidden'); return; }
+            box.classList.remove('hidden');
+            let activo = false;
+            if (pushActivo()) { try { activo = !!(await apiInventario('estado', { dispositivoId: pushIdGuardado() }, true)).avisosEnEsteDispositivo; } catch (e) {} }
+            box.innerHTML = activo
+                ? '<span class="text-emerald-300 font-bold"><i class="fa-solid fa-bell mr-1"></i>Recibes en este celular los avisos de nuevas novedades.</span>'
+                : '<span><i class="fa-regular fa-bell-slash mr-1"></i>Este celular no recibe avisos de nuevas novedades.</span><button type="button" onclick="activarAvisosInv(this)" class="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold">Recibir avisos aquí</button>';
+        }
+        window.activarAvisosInv = async (btn) => {
+            if (!pushActivo()) { await window.toggleNotificaciones(); if (!pushActivo()) return; }
+            try {
+                await conBoton(btn, () => apiInventario('registrarAvisos', { dispositivoId: pushIdGuardado() }, true));
+                showAlert('Avisos activados', 'Te llegará una notificación a este celular cada vez que alguien reporte una novedad de un equipo.');
+            } catch (e) { showAlert('No se pudieron activar', e.message, true); }
+            refrescarAvisosInv();
+        };
+
+        // --- Exportar ---
+        const COLUMNAS_INV = [['Código', e => e.codigo || ''], ['Nombre', e => e.nombre], ['Categoría', e => e.categoria || 'Otros'], ['Marca', e => e.marca || ''],
+            ['Referencia', e => e.referencia || ''], ['N.º de serie', e => e.serie || ''], ['Ubicación', e => e.ubicacion || ''], ['Cantidad', e => e.cantidad || 1],
+            ['Fecha de ingreso', e => fechaCorta(e.fechaIngreso)], ['Estado', e => (INV_ESTADOS[e.estado] || INV_ESTADOS.bueno).l], ['En uso', e => e.enUso ? 'Sí' : 'No'], ['Observaciones', e => e.observaciones || '']];
+        const equiposParaInforme = () => [...inventario.equipos].sort((a, b) => String(a.codigo || a.nombre).localeCompare(String(b.codigo || b.nombre), 'es', { numeric: true }));
+        const hoyCO = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+        function cargarScript(src) {
+            return new Promise((ok, mal) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = () => mal(new Error('No se pudo descargar la herramienta de Excel. Revisa tu conexión.')); document.head.appendChild(sc); });
+        }
+        window.exportarInventarioExcel = async () => {
+            if (!inventario.equipos.length) { showAlert('Sin equipos', 'Aún no hay equipos para exportar.', true); return; }
+            try {
+                if (!window.XLSX) await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+                const filas = equiposParaInforme().map(e => Object.fromEntries(COLUMNAS_INV.map(([k, f]) => [k, f(e)])));
+                const hoja = XLSX.utils.json_to_sheet(filas, { header: COLUMNAS_INV.map(c => c[0]) });
+                hoja['!cols'] = [10, 28, 18, 14, 16, 14, 14, 9, 14, 13, 8, 40].map(w => ({ wch: w }));
+                hoja['!autofilter'] = { ref: hoja['!ref'] };
+                const libro = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(libro, hoja, 'Equipos');
+                XLSX.writeFile(libro, `Inventario de equipos ${hoyCO()}.xlsx`);
+            } catch (e) { showAlert('No se pudo exportar', e.message, true); }
+        };
+        window.imprimirInventario = () => {
+            if (!inventario.equipos.length) { showAlert('Sin equipos', 'Aún no hay equipos para el informe.', true); return; }
+            const eqs = equiposParaInforme();
+            const n = (k) => eqs.filter(e => e.estado === k).length;
+            const [y, m, d] = hoyCO().split('-');
+            document.getElementById('inv-print').innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #ea580c;padding-bottom:6px;margin-bottom:10px">
+                    <div><div style="font-size:11px;font-weight:800;color:#c2410c;letter-spacing:.05em">MMM BOSTON MEDELLÍN · COMUNICACIONES</div>
+                    <div style="font-size:22px;font-weight:800">Inventario de equipos</div></div>
+                    <div style="font-size:11px;color:#475569;text-align:right">Fecha: ${d}/${m}/${y}<br>Total: ${eqs.length} · Bueno: ${n('bueno')} · Con novedad: ${n('novedad')} · Malo: ${n('malo')} · En uso: ${eqs.filter(e => e.enUso).length}</div>
+                </div>
+                <table><colgroup>${[6, 13, 9, 7, 8, 7, 7, 5, 7, 7, 4, 20].map(w => `<col style="width:${w}%">`).join('')}</colgroup><thead><tr>${COLUMNAS_INV.map(c => `<th>${c[0]}</th>`).join('')}</tr></thead>
+                <tbody>${eqs.map(e => `<tr>${COLUMNAS_INV.map(([k, f]) => `<td${k === 'Estado' ? ` style="font-weight:800;color:${e.estado === 'malo' ? '#b91c1c' : e.estado === 'novedad' ? '#b45309' : '#047857'}"` : ''}>${esc(f(e))}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+            document.body.classList.add('imprimiendo-inv');
+            const fin = () => { document.body.classList.remove('imprimiendo-inv'); window.removeEventListener('afterprint', fin); };
+            window.addEventListener('afterprint', fin);
+            setTimeout(() => { window.print(); setTimeout(fin, 1000); }, 50);
+        };
+
         // ================= NOTIFICACIONES PUSH =================
         // Cada persona activa los avisos desde el botón de la campana. Su dispositivo queda registrado en Firebase
         // (artifacts/{appId}/public/data/dispositivos) y, cuando el administrador guarda un cambio en la programación,
@@ -3613,12 +4168,15 @@
             } catch (e) { pushVapid = ''; }
             pintarBotonNotif();
             revisarRecordatorios();
+            refrescarAvisosInv();
             // Si ya estaban activadas, se renueva el registro en silencio (los tokens pueden cambiar con el tiempo)
             if (pushVapid && db && pushActivo()) pushRegistrar().then(pintarBotonNotif).catch(e => console.warn('No se renovó el registro de avisos', e));
         }
         // Al tocar una notificación se abre la programación
         if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', (ev) => {
-            if (ev.data && ev.data.tipo === 'abrir-programacion' && window.openWeekly) window.openWeekly();
+            if (!ev.data) return;
+            if (ev.data.tipo === 'abrir-inventario') { window.closeWeekly && window.closeWeekly(); window.openTab('inventario'); }
+            else if (ev.data.tipo === 'abrir-programacion' && window.openWeekly) window.openWeekly();
         });
         iniciarNotificaciones();
 

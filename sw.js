@@ -11,7 +11,7 @@
  *  - Recibe las notificaciones (push) que envía el administrador al cambiar la
  *    programación y abre la app al tocarlas.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'comunicaciones-' + VERSION;
 const PRECACHE = [
   '/',
@@ -112,7 +112,7 @@ self.addEventListener('notificationclick', (event) => {
     for (const c of abiertas) {
       if (new URL(c.url).origin === self.location.origin) {
         await c.focus();
-        try { c.postMessage({ tipo: 'abrir-programacion' }); } catch (e) {}
+        try { c.postMessage({ tipo: destino.includes('inventario') ? 'abrir-inventario' : 'abrir-programacion' }); } catch (e) {}
         return;
       }
     }
