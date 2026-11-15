@@ -8,6 +8,9 @@ Sección **Inventario** de la app (menú principal; en el celular, en **Más**).
   sus novedades abiertas y el historial. Todo se actualiza en vivo.
 - Arriba hay un resumen (total, por estado y en uso). Tocar un recuadro filtra la lista.
   También se puede buscar por nombre, código, marca, referencia o ubicación.
+- **Tarjetas o Lista:** con el selector junto al conteo de equipos cada persona elige cómo ver el inventario
+  (la app recuerda la elección en su dispositivo). En la lista, cada equipo es una fila (en computador con columnas
+  de marca/referencia, ubicación, cantidad, estado y uso); al tocarla se despliega el detalle con todas sus acciones.
 - **Reportar novedad:** en el equipo, toca *Reportar novedad*, elige tu nombre, describe qué pasa
   (por ejemplo "El cargador no sirve") y escribe el **código del grupo**. La app recuerda tu nombre y el código
   para la próxima vez. El equipo pasa solo a **Con novedad** (si estaba en **Malo**, sigue en Malo).

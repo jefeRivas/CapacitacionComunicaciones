@@ -170,6 +170,15 @@
         .inv-estado-op input[value="bueno"]:checked + span { background: #059669; border-color: #059669; }
         .inv-estado-op input[value="novedad"]:checked + span { background: #f59e0b; border-color: #f59e0b; }
         .inv-estado-op input[value="malo"]:checked + span { background: #dc2626; border-color: #dc2626; }
+        .inv-vista-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .8rem; border-radius: 9999px; font-size: .8rem; font-weight: 800; color: #64748b; }
+        .inv-vista-btn[aria-pressed="true"] { background: var(--brand); color: #fff; }
+        .inv-fila-cab { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: .6rem; align-items: center; width: 100%; padding: .7rem .9rem; text-align: left; }
+        .inv-fila-cab:hover { background: #fff7ed; }
+        .inv-fila-cab .md-col { display: none; }
+        @media (min-width: 768px) {
+            .inv-fila-cab, .inv-lista-enc { grid-template-columns: 5.5rem minmax(0, 1.6fr) minmax(0, 1.2fr) minmax(0, 1fr) 3.5rem 7.5rem 5.5rem 1.5rem; }
+            .inv-fila-cab .md-col { display: block; }
+        }
         .inv-chip { border-radius: 1rem; padding: .65rem .8rem; border: 2px solid transparent; text-align: left; transition: transform .1s; }
         .inv-chip:active { transform: scale(.97); }
         .inv-chip.sel { border-color: #1e293b; }
@@ -896,6 +905,13 @@
                 </div>
             </div>
 
+            <div class="flex items-center justify-between gap-2 mb-3">
+                <p id="inv-conteo" class="text-sm font-bold text-slate-500"></p>
+                <div class="inline-flex bg-white border border-orange-200 rounded-full p-1" role="group" aria-label="Forma de ver el inventario">
+                    <button type="button" data-vista="tarjetas" class="inv-vista-btn" aria-pressed="true" title="Ver en tarjetas"><i class="fa-solid fa-grip"></i><span>Tarjetas</span></button>
+                    <button type="button" data-vista="lista" class="inv-vista-btn" aria-pressed="false" title="Ver en lista"><i class="fa-solid fa-list"></i><span>Lista</span></button>
+                </div>
+            </div>
             <div id="inv-lista" class="grid gap-3 md:grid-cols-2"></div>
             <p id="inv-vacio" class="hidden text-center text-slate-500 py-8"></p>
         </div>
@@ -3662,6 +3678,8 @@
         };
         let inventario = { equipos: [], reportes: [] }, invEstadoCarga = 'cargando', invFiltroEstado = '';
         let invEditando = null, invReportando = null, invResolviendo = null, invCodigoAuto = '';
+        let invVista = (() => { try { return localStorage.getItem('inv_vista') === 'lista' ? 'lista' : 'tarjetas'; } catch (e) { return 'tarjetas'; } })();
+        const invAbiertos = new Set();   // filas desplegadas en la vista lista
         function normalizarInventario(d) {
             return { equipos: Array.isArray(d && d.equipos) ? d.equipos : [], reportes: Array.isArray(d && d.reportes) ? d.reportes : [] };
         }
@@ -3750,21 +3768,60 @@
             selCat.innerHTML = '<option value="">Categoría</option>' + cats.map(c => `<option ${c === catActual ? 'selected' : ''}>${esc(c)}</option>`).join('');
 
             const vacio = document.getElementById('inv-vacio');
+            document.getElementById('inv-conteo').textContent = '';
             if (invEstadoCarga !== 'ok') {
-                lista.innerHTML = ''; vacio.classList.remove('hidden');
+                lista.innerHTML = ''; lista.className = 'hidden'; vacio.classList.remove('hidden');
                 vacio.innerHTML = invEstadoCarga === 'error' ? '<i class="fa-solid fa-triangle-exclamation mr-1 text-amber-500"></i> No se pudo cargar el inventario. Revisa tu conexión.' : (db ? '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Cargando inventario…' : 'El inventario necesita la conexión con Firebase.');
                 return;
             }
             const filtrados = equiposFiltrados();
             if (!filtrados.length) {
-                lista.innerHTML = ''; vacio.classList.remove('hidden');
+                lista.innerHTML = ''; lista.className = 'hidden'; vacio.classList.remove('hidden');
                 vacio.innerHTML = eqs.length ? '<i class="fa-regular fa-face-meh mr-1"></i> Ningún equipo coincide con la búsqueda o los filtros.'
                     : (admin ? '<i class="fa-solid fa-box-open mr-1"></i> Aún no hay equipos. Toca <strong>Agregar equipo</strong> para empezar.' : '<i class="fa-solid fa-box-open mr-1"></i> Aún no hay equipos registrados.');
                 return;
             }
             vacio.classList.add('hidden');
-            lista.innerHTML = filtrados.map(e => tarjetaEquipo(e, admin)).join('');
+            document.getElementById('inv-conteo').textContent = filtrados.length === eqs.length ? `${eqs.length} equipo${eqs.length === 1 ? '' : 's'}` : `${filtrados.length} de ${eqs.length} equipos`;
+            if (invVista === 'lista') {
+                lista.className = 'bg-white border border-orange-100 rounded-2xl shadow-sm overflow-hidden divide-y divide-orange-100';
+                lista.innerHTML = `<div class="inv-lista-enc hidden md:grid gap-[.6rem] px-[.9rem] py-2 bg-orange-50 text-[11px] font-extrabold uppercase text-orange-800">
+                        <span>Código</span><span>Equipo</span><span>Marca · Referencia</span><span>Ubicación</span><span>Cant.</span><span>Estado</span><span>Uso</span><span></span></div>`
+                    + filtrados.map(e => filaEquipo(e, admin)).join('');
+                lista.querySelectorAll('[data-fila]').forEach(b => b.addEventListener('click', () => {
+                    const id = b.dataset.fila;
+                    invAbiertos.has(id) ? invAbiertos.delete(id) : invAbiertos.add(id);
+                    renderInventario();
+                }));
+            } else {
+                lista.className = 'grid gap-3 md:grid-cols-2';
+                lista.innerHTML = filtrados.map(e => tarjetaEquipo(e, admin)).join('');
+            }
             lista.querySelectorAll('[data-acc]').forEach(b => b.addEventListener('click', () => accionInv(b.dataset.acc, b.dataset.id, b)));
+        }
+
+        // Vista en lista: una fila compacta por equipo; al tocarla se despliega la tarjeta completa con todas sus acciones.
+        function filaEquipo(e, admin) {
+            const est = INV_ESTADOS[e.estado] || INV_ESTADOS.bueno, cat = catDe(e.categoria);
+            const abiertos = inventario.reportes.filter(r => r.equipoId === e.id && r.estado !== 'resuelto').length;
+            const abierto = invAbiertos.has(e.id);
+            const mr = [e.marca, e.referencia].filter(Boolean).map(esc).join(' · ');
+            return `<div class="${abierto ? 'bg-orange-50/60' : ''}">
+                <button type="button" data-fila="${esc(e.id)}" class="inv-fila-cab" aria-expanded="${abierto}">
+                    <span class="text-[11px] font-extrabold ${e.codigo ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-400'} rounded px-1.5 py-0.5 justify-self-start">${e.codigo ? esc(e.codigo) : '—'}</span>
+                    <span class="min-w-0">
+                        <span class="block font-bold text-slate-800 truncate"><i class="fa-solid ${cat.i} text-orange-400 mr-1.5 md:hidden"></i>${esc(e.nombre)}${e.cantidad > 1 ? ` <span class="text-xs text-slate-500 md:hidden">× ${e.cantidad}</span>` : ''}</span>
+                        <span class="block text-xs text-slate-500 truncate">${esc(e.categoria || 'Otros')}${abiertos ? ` · <span class="text-amber-700 font-bold"><i class="fa-solid fa-triangle-exclamation"></i> ${abiertos} novedad${abiertos === 1 ? '' : 'es'}</span>` : ''}</span>
+                    </span>
+                    <span class="md-col text-sm text-slate-600 truncate">${mr || '<span class="text-slate-300">—</span>'}</span>
+                    <span class="md-col text-sm text-slate-600 truncate">${esc(e.ubicacion) || '<span class="text-slate-300">—</span>'}</span>
+                    <span class="md-col text-sm text-slate-600">${e.cantidad || 1}</span>
+                    <span class="text-[11px] font-extrabold rounded-full px-2 py-1 whitespace-nowrap ${est.badge}"><i class="fa-solid ${est.i} md:mr-1"></i><span class="hidden md:inline">${est.l}</span></span>
+                    <span class="hidden md:inline text-xs font-bold ${e.enUso ? 'text-sky-700' : 'text-slate-400'}"><i class="fa-solid ${e.enUso ? 'fa-toggle-on' : 'fa-toggle-off'} mr-1"></i>${e.enUso ? 'En uso' : 'Sin usar'}</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform ${abierto ? 'rotate-180' : ''}"></i>
+                </button>
+                ${abierto ? `<div class="px-3 pb-3">${tarjetaEquipo(e, admin)}</div>` : ''}
+            </div>`;
         }
 
         function tarjetaEquipo(e, admin) {
@@ -3812,6 +3869,15 @@
 
         ['inv-buscar', 'inv-f-categoria', 'inv-f-uso'].forEach(id => document.getElementById(id).addEventListener('input', () => renderInventario()));
         document.getElementById('inv-f-estado').addEventListener('input', (ev) => { invFiltroEstado = ev.target.value; renderInventario(); });
+        function pintarVistaInv() {
+            document.querySelectorAll('.inv-vista-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.vista === invVista)));
+        }
+        document.querySelectorAll('.inv-vista-btn').forEach(b => b.addEventListener('click', () => {
+            invVista = b.dataset.vista;
+            try { localStorage.setItem('inv_vista', invVista); } catch (e) {}
+            pintarVistaInv(); renderInventario();
+        }));
+        pintarVistaInv();
         renderInventario();
 
         async function accionInv(acc, id, btn) {
