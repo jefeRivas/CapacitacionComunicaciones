@@ -1,7 +1,9 @@
-// GET/POST /api/recordatorios — Envía los recordatorios de eventos que ya correspondan:
-//   · "24 horas antes": desde 24 h antes hasta 3 h antes del evento.
-//   · "1 hora antes":   desde 60 min antes hasta la hora del evento.
-// Lo llama GitHub Actions cada 10 minutos (.github/workflows/recordatorios.yml).
+// GET/POST /api/recordatorios — Envía los recordatorios que ya correspondan:
+//   · Eventos, "24 horas antes": desde 24 h antes hasta 3 h antes del evento.
+//   · Eventos, "1 hora antes":   desde 60 min antes hasta la hora del evento.
+//   · Cumpleaños del equipo (activos e inactivos): el mismo día, desde las 11:00 a. m. (hora de Colombia).
+// Lo llaman: la tarea diaria de Vercel (11:00 a. m., vercel.json), GitHub Actions (.github/workflows/recordatorios.yml)
+// y la app cada vez que alguien la abre.
 // Es seguro llamarlo cuantas veces sea: cada recordatorio se registra en Firestore
 // (public/data/recordatorios) antes de enviarse y nunca se envía dos veces.
 const g = require('./_lib/google');
@@ -66,6 +68,49 @@ function pendientes(eventos, ahora) {
   return out;
 }
 
+// ---- Cumpleaños ----
+const HORA_CUMPLE = 11;   // desde las 11:00 a. m. (Colombia)
+const partesColombia = (ms) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_IANA, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(ms)).map(x => [x.type, x.value]));
+  return { fecha: `${p.year}-${p.month}-${p.day}`, anio: +p.year, md: `${p.month}-${p.day}`, hora: +p.hour };
+};
+const DIAS_MES = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const cumpleValido = (c) => { const x = /^(\d{2})-(\d{2})$/.exec(c || ''); return !!x && +x[1] >= 1 && +x[1] <= 12 && +x[2] >= 1 && +x[2] <= DIAS_MES[+x[1] - 1]; };
+// Miembros (activos e inactivos: todos son parte del grupo) que cumplen años en la fecha dada. El 29 de febrero se celebra el 28 en años no bisiestos.
+function cumpleanerosDe(miembros, fecha) {
+  const anio = +fecha.slice(0, 4), md = fecha.slice(5);
+  const bisiesto = (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
+  return (Array.isArray(miembros) ? miembros : []).filter(m => m && m.id && String(m.nombre || '').trim() && cumpleValido(m.cumple)
+    && (m.cumple === md || (!bisiesto && m.cumple === '02-29' && md === '02-28')));
+}
+const unirNombres = (n) => n.length <= 1 ? (n[0] || '') : n.slice(0, -1).join(', ') + ' y ' + n[n.length - 1];
+function armarAvisoCumple(nombres, fecha) {
+  const varios = nombres.length > 1;
+  return {
+    title: `🎂 ¡Hoy ${varios ? 'están' : 'está'} de cumpleaños ${unirNombres(nombres)}!`.slice(0, 120),
+    body: varios
+      ? 'Celebremos este día tan especial: escríbeles y deséales un feliz cumpleaños. ¡Que Dios siga derramando bendiciones sobre sus vidas! 🎉'
+      : 'Celebremos este día tan especial: escríbele y deséale un feliz cumpleaños. ¡Que Dios siga derramando bendiciones sobre su vida! 🎉',
+    url: '/', tag: 'cumple-' + fecha
+  };
+}
+const idMarcaCumple = (m, anio) => `cumple-${String(m.id).replace(/[^A-Za-z0-9_-]/g, '')}-${anio}`;
+
+// Envía la felicitación de hoy si ya son las 11:00 a. m. y aún no se envió (una vez por persona y año).
+async function revisarCumpleanos(sa, at, ahora) {
+  const c = partesColombia(ahora);
+  if (c.hora < HORA_CUMPLE) return null;
+  const equipo = await g.leerDocumento(sa.project_id, at, `artifacts/${g.APP_ID}/public/data/config/equipo`);
+  const hoy = cumpleanerosDe(equipo && equipo.miembros, c.fecha);
+  const nuevos = [];
+  for (const m of hoy) {
+    if (await g.crearSiNoExiste(sa.project_id, at, `artifacts/${g.APP_ID}/public/data/recordatorios`, idMarcaCumple(m, c.anio), { tipo: 'cumple', miembro: m.id, fecha: c.fecha, enviado: ahora })) nuevos.push(m.nombre.trim());
+  }
+  if (!nuevos.length) return null;
+  const r = await g.enviarATodos(sa, at, armarAvisoCumple(nuevos, c.fecha));
+  return { cumpleanos: nuevos, ...r };
+}
+
 async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'GET' && req.method !== 'POST') { res.statusCode = 405; return res.json({ error: 'Método no permitido' }); }
@@ -84,8 +129,14 @@ async function handler(req, res) {
       const r = await g.enviarATodos(sa, at, armarAviso(p.evento, p.tipo, p.inicio, ahora));
       resultado.push({ evento: p.evento.titulo, tipo: p.tipo, ...r });
     }
+    // Los cumpleaños no deben impedir los recordatorios de eventos (ni al revés)
+    let errorCumple;
+    try {
+      const cumple = await revisarCumpleanos(sa, at, ahora);
+      if (cumple) resultado.push({ tipo: 'cumple', ...cumple });
+    } catch (e) { console.error('Error revisando cumpleaños', e); errorCumple = e.message; }
     res.statusCode = 200;
-    return res.json({ ok: true, revisados: (semana && Array.isArray(semana.eventos)) ? semana.eventos.length : 0, enviados: resultado });
+    return res.json({ ok: true, revisados: (semana && Array.isArray(semana.eventos)) ? semana.eventos.length : 0, enviados: resultado, ...(errorCumple ? { errorCumple } : {}) });
   } catch (e) {
     console.error(e);
     res.statusCode = e.status || 500;
@@ -97,3 +148,7 @@ module.exports = handler;
 module.exports.pendientes = pendientes;
 module.exports.armarAviso = armarAviso;
 module.exports.inicioEvento = inicioEvento;
+module.exports.cumpleanerosDe = cumpleanerosDe;
+module.exports.armarAvisoCumple = armarAvisoCumple;
+module.exports.idMarcaCumple = idMarcaCumple;
+module.exports.partesColombia = partesColombia;

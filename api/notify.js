@@ -2,6 +2,7 @@
 // Solo funciona con la sesión del administrador (correo incluido en ADMIN_EMAILS).
 //   · { titulo }                        → "Programación actualizada"
 //   · { tipo: 'evento', evento: {...} } → aviso manual de un evento (botón en Configurar → Eventos)
+//   · { tipo: 'cumple', miembros: [{ id, nombre }] } → felicitación de cumpleaños manual (Configurar)
 const g = require('./_lib/google');
 const rec = require('./recordatorios');
 
@@ -28,6 +29,17 @@ module.exports = async (req, res) => {
       if (!e.titulo || !Number.isFinite(t)) { res.statusCode = 400; return res.json({ error: 'El evento necesita nombre, fecha y hora.' }); }
       if (t <= ahora) { res.statusCode = 400; return res.json({ error: 'Este evento ya empezó o ya pasó.' }); }
       aviso = rec.armarAviso(e, t - ahora <= 60 * 60 * 1000 ? '1h' : '24h', t, ahora);
+    } else if (body.tipo === 'cumple') {
+      // Felicitación manual (botón en Configurar). Deja registrado que ya se felicitó este año, para que el aviso
+      // automático de las 11:00 a. m. no se repita.
+      const miembros = (Array.isArray(body.miembros) ? body.miembros : []).slice(0, 20)
+        .map(m => ({ id: limpiar(m && m.id, 60), nombre: limpiar(m && m.nombre, 60) })).filter(m => m.id && m.nombre);
+      if (!miembros.length) { res.statusCode = 400; return res.json({ error: 'No hay a quién felicitar.' }); }
+      const sa0 = g.leerCuentaServicio(), at0 = await g.tokenDeAcceso(sa0), c = rec.partesColombia(Date.now());
+      for (const m of miembros) {
+        await g.crearSiNoExiste(sa0.project_id, at0, `artifacts/${g.APP_ID}/public/data/recordatorios`, rec.idMarcaCumple(m, c.anio), { tipo: 'cumple', miembro: m.id, fecha: c.fecha, enviado: Date.now(), manual: 1 });
+      }
+      aviso = rec.armarAvisoCumple(miembros.map(m => m.nombre), c.fecha);
     } else {
       const titulo = limpiar(body.titulo, 80);
       aviso = {

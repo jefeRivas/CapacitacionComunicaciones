@@ -230,6 +230,20 @@ como [cron-job.org](https://cron-job.org): una tarea cada 5 minutos, método **P
 
 ---
 
+## Cumpleaños
+
+- El día del cumpleaños de cada miembro (activos **e inactivos**: todos son parte del grupo), desde las
+  **11:00 a. m.** (hora de Colombia), llega a todos: **"🎂 ¡Hoy está de cumpleaños Nombre!"** —
+  *"Celebremos este día tan especial: escríbele y deséale un feliz cumpleaños. ¡Que Dios siga derramando
+  bendiciones sobre su vida! 🎉"*. Si son varios el mismo día, va un solo aviso con todos los nombres.
+- La fecha se registra en **Configurar → Equipo → Cumpleaños**.
+- Se envía una sola vez por persona y año. Si el disparador llega tarde, se envía igual ese mismo día.
+- **Disparadores:** la tarea diaria de Vercel (`vercel.json`, 16:00 UTC = 11:00 a. m. Colombia; en el plan gratuito
+  puede ejecutarse en cualquier momento entre las 11:00 y las 11:59), la revisión al abrir la app y GitHub Actions.
+- **Manual:** cuando alguien cumple años hoy, aparece en **Configurar → Programación** ("Hoy cumple años…") y en
+  **Equipo** (etiqueta "¡Hoy!") el botón **Enviar felicitación ahora / Felicitar ahora**. Si se envía a mano, la
+  automática de ese día ya no se repite.
+
 ## Limitaciones
 
 - **iPhone / iPad:** requiere iOS 16.4 o superior y la app **instalada** en la pantalla de inicio.
