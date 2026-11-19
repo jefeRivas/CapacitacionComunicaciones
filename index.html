@@ -978,6 +978,11 @@
                 <p id="weekly-title" class="text-sm sm:text-lg font-semibold text-orange-50 mt-1"></p>
             </div>
             <div class="p-4 sm:p-8 space-y-6">
+                <section id="weekly-cumple-container" class="hidden rounded-xl p-4 sm:p-5 border border-pink-200 bg-gradient-to-r from-pink-50 via-amber-50 to-orange-50">
+                    <h3 class="text-lg sm:text-xl font-extrabold text-pink-700 mb-1">🎂 ¡Cumpleaños esta semana!</h3>
+                    <p class="text-sm text-slate-600 mb-3">Celebremos y felicitemos a nuestros hermanos del equipo:</p>
+                    <ul id="weekly-cumple" class="space-y-2"></ul>
+                </section>
                 <section>
                     <h3 class="text-lg sm:text-xl font-bold text-orange-800 mb-3"><i class="fa-solid fa-users-gear text-orange-500 mr-2"></i>Programación</h3>
                     <div id="weekly-table" class="hidden sm:block table-wrapper bg-white"></div>
@@ -1136,6 +1141,21 @@
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <label class="block font-bold text-slate-700 mb-1">Título / Rango de Fechas</label>
                     <input type="text" id="cfg-titulo" class="w-full border border-slate-300 p-2 rounded focus:ring-2 focus:ring-orange-500 outline-none">
+                </div>
+
+                <!-- Cumpleaños de la semana -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-pink-200">
+                    <h3 class="font-bold text-slate-700 mb-1">🎂 Cumpleaños de la semana</h3>
+                    <p class="text-xs text-slate-500 mb-3">Revisa quién del equipo cumple años en la semana (lunes a domingo). Si hay alguno, se mostrará un mensaje en la ventana de programación, antes de la programación. Las fechas de cumpleaños se registran en <strong>Equipo</strong>.</p>
+                    <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Semana</label>
+                            <input type="date" id="cfg-cumple-fecha" class="border border-slate-300 p-2 rounded text-base sm:text-sm focus:ring-1 focus:ring-orange-500 outline-none">
+                        </div>
+                        <p id="cfg-cumple-rango" class="text-sm font-bold text-slate-600 sm:pb-2"></p>
+                        <button type="button" id="cfg-cumple-btn" onclick="revisarCumpleanos()" class="sm:ml-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-bold text-sm"><i class="fa-solid fa-cake-candles"></i> Revisar cumpleaños</button>
+                    </div>
+                    <div id="cfg-cumple-res" class="mt-3"></div>
                 </div>
 
                 <!-- Días y Participantes -->
@@ -1832,8 +1852,19 @@
         }
 
         // ================= LÓGICA DE INTERFAZ SEMANAL =================
+        // Cumpleaños guardados con la programación que aún deben mostrarse (hasta el domingo de esa semana)
+        function cumpleanosVigentes() {
+            const cs = semanaInfo.cumpleSemana, lista = semanaInfo.cumpleanos || [];
+            if (!cs || !cs.hasta || !lista.length || hoyColombia() > cs.hasta) return [];
+            return [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        }
         function renderWeekly() {
             document.getElementById('weekly-title').innerText = semanaInfo.titulo;
+            const cumples = cumpleanosVigentes(), hoy = hoyColombia();
+            document.getElementById('weekly-cumple-container').classList.toggle('hidden', !cumples.length);
+            document.getElementById('weekly-cumple').innerHTML = cumples.map(c => `<li class="flex items-center gap-3 bg-white/80 rounded-lg px-3 py-2">
+                <span class="text-2xl">🎉</span>
+                <span class="text-slate-700"><strong class="text-slate-900">${esc(c.nombre)}</strong> cumple años el <strong class="text-pink-700">${esc(fechaLarga(c.fecha))}</strong>${c.fecha === hoy ? ' <span class="ml-1 text-[11px] font-extrabold uppercase bg-pink-600 text-white rounded-full px-2 py-0.5 align-middle">¡Hoy!</span>' : ''}</span></li>`).join('');
 
             let html = '<table><thead><tr><th>Rol</th>';
             semanaInfo.dias.forEach(d => { html += `<th class="text-center">${d}</th>`; });
@@ -1935,6 +1966,25 @@
             ctx.fillStyle = '#fff7ed'; ctx.font = `700 32px ${IMG_FONT}`;
             titleLines.forEach((l, i) => ctx.fillText(l, PAD + 32, y + 160 + i * 42));
             y += headH + 28;
+
+            // ---- Cumpleaños de la semana ----
+            const cumplesImg = cumpleanosVigentes();
+            if (cumplesImg.length) {
+                const boxH = 28 + 40 + cumplesImg.length * 40 + 16;
+                ctx.fillStyle = '#fdf2f8'; rrPath(ctx, PAD, y, innerW, boxH, 24); ctx.fill();
+                ctx.strokeStyle = '#fbcfe8'; ctx.lineWidth = 2; rrPath(ctx, PAD, y, innerW, boxH, 24); ctx.stroke();
+                ctx.textAlign = 'left'; ctx.fillStyle = '#be185d'; ctx.font = `800 28px ${IMG_FONT}`;
+                ctx.fillText('🎂 ¡Cumpleaños esta semana!', PAD + 28, y + 52);
+                cumplesImg.forEach((c, i) => {
+                    const ly = y + 52 + 44 + i * 40;
+                    ctx.fillStyle = '#1e293b'; ctx.font = `800 25px ${IMG_FONT}`;
+                    ctx.fillText('🎉 ' + c.nombre, PAD + 28, ly);
+                    const w = ctx.measureText('🎉 ' + c.nombre + '  ').width;
+                    ctx.fillStyle = '#be185d'; ctx.font = `700 24px ${IMG_FONT}`;
+                    ctx.fillText('— ' + fechaLarga(c.fecha), PAD + 28 + w, ly);
+                });
+                y += boxH + 28;
+            }
 
             // ---- Tabla ----
             const cols = semanaInfo.dias.map((d, i) => ({ d, i })).filter(c => (c.d || '').trim());
@@ -2799,6 +2849,7 @@
 
             draftProblemas = JSON.parse(JSON.stringify(problemasInfo));
             draftEventos = JSON.parse(JSON.stringify(semanaInfo.eventos || [])).sort((a, b) => (inicioEvento(a) || 0) - (inicioEvento(b) || 0));
+            cargarCumpleConfig();
             renderEventosUI();
             renderEquipoUI();
             renderScheduleGrid();
@@ -2826,6 +2877,87 @@
         // Miembros guardados antes de este cambio no tienen "dias": se consideran disponibles todos los días.
         const diasDe = (m) => Array.isArray(m.dias) ? m.dias : DIAS_SERVICIO.map(d => d.k);
         const disponible = (m, dIdx) => { const d = diaDeColumna(dIdx); return !d || diasDe(m).includes(d.k); };
+
+        // ---- Cumpleaños (fecha "MM-DD" en cada miembro; semana de lunes a domingo, hora de Colombia) ----
+        // (MESES ya está definido más abajo, en Aportes: 'Enero'…'Diciembre')
+        const DIAS_MES = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        const cumpleValido = (c) => { const x = /^(\d{2})-(\d{2})$/.exec(c || ''); return !!x && +x[1] >= 1 && +x[1] <= 12 && +x[2] >= 1 && +x[2] <= DIAS_MES[+x[1] - 1]; };
+        const cumpleDe = (m) => cumpleValido(m.cumple) ? { m: +m.cumple.slice(0, 2), d: +m.cumple.slice(3) } : { m: 0, d: 0 };
+        const hoyColombia = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+        // Fechas "YYYY-MM-DD" con aritmética en UTC (sin problemas de horario)
+        const aUTC = (f) => Date.UTC(+f.slice(0, 4), +f.slice(5, 7) - 1, +f.slice(8, 10));
+        const deUTC = (ms) => new Date(ms).toISOString().slice(0, 10);
+        const sumarDias = (f, n) => deUTC(aUTC(f) + n * 86400000);
+        const lunesDe = (f) => sumarDias(f, -((new Date(aUTC(f)).getUTCDay() + 6) % 7));
+        const fechaLarga = (f, op = { weekday: 'long', day: 'numeric', month: 'long' }) => new Intl.DateTimeFormat('es-CO', { timeZone: 'UTC', ...op }).format(new Date(aUTC(f)));
+        // Quiénes cumplen años entre el lunes "desde" y el domingo siguiente. El 29 de febrero se celebra el 28 en años no bisiestos.
+        function cumpleanosDeSemana(desde, miembros) {
+            const out = [];
+            for (let i = 0; i < 7; i++) {
+                const f = sumarDias(desde, i), md = f.slice(5), anio = +f.slice(0, 4);
+                const bisiesto = (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
+                miembros.forEach(m => {
+                    if (!m.activo || !String(m.nombre || '').trim() || !cumpleValido(m.cumple)) return;
+                    if (m.cumple === md || (!bisiesto && m.cumple === '02-29' && md === '02-28')) out.push({ nombre: m.nombre.trim(), fecha: f });
+                });
+            }
+            return out;
+        }
+        // Semana sugerida: la que corresponde a los días escritos en la programación (por ejemplo "Martes 11");
+        // si no se puede deducir, la semana actual.
+        function semanaSugerida() {
+            const hoy = hoyColombia(), nombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+            for (let i = 0; i < 3; i++) {
+                const t = sinTildes((document.getElementById(`cfg-dia-${i}`) || {}).value || '');
+                const dow = nombres.findIndex(n => t.includes(n)), num = +((t.match(/\b(\d{1,2})\b/) || [])[1] || 0);
+                if (dow < 0 || !num) continue;
+                let mejor = null;
+                for (let k = -14; k <= 28; k++) {
+                    const f = sumarDias(hoy, k);
+                    if (new Date(aUTC(f)).getUTCDay() === dow && +f.slice(8) === num && (mejor === null || Math.abs(k) < Math.abs(mejor.k))) mejor = { f, k };
+                }
+                if (mejor) return lunesDe(mejor.f);
+            }
+            return lunesDe(hoy);
+        }
+        let draftCumple = { desde: '', lista: [] };
+        function pintarRangoCumple() {
+            const desde = draftCumple.desde || lunesDe(document.getElementById('cfg-cumple-fecha').value || hoyColombia());
+            document.getElementById('cfg-cumple-rango').textContent = `Lunes ${fechaLarga(desde, { day: 'numeric', month: 'short' })} – domingo ${fechaLarga(sumarDias(desde, 6), { day: 'numeric', month: 'short' })}`;
+        }
+        function pintarResultadoCumple() {
+            const box = document.getElementById('cfg-cumple-res');
+            if (!draftCumple.desde) { box.innerHTML = ''; return; }
+            if (!draftCumple.lista.length) { box.innerHTML = '<p class="text-sm text-slate-500"><i class="fa-regular fa-calendar-xmark mr-1"></i>No hay cumpleaños en esa semana. No se mostrará ningún mensaje.</p>'; return; }
+            box.innerHTML = '<p class="text-xs font-bold text-pink-700 uppercase mb-1">Se mostrará al equipo:</p><ul class="space-y-1">' + draftCumple.lista.map((c, i) =>
+                `<li class="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-lg px-3 py-2 text-sm"><span>🎉</span><span class="flex-1"><strong>${esc(c.nombre)}</strong> — ${esc(fechaLarga(c.fecha))}</span><button type="button" data-quitar-cumple="${i}" class="text-slate-400 hover:text-red-500" title="No mostrar"><i class="fa-solid fa-xmark"></i></button></li>`).join('') + '</ul>';
+            box.querySelectorAll('[data-quitar-cumple]').forEach(b => b.addEventListener('click', () => { draftCumple.lista.splice(+b.dataset.quitarCumple, 1); pintarResultadoCumple(); }));
+        }
+        function cargarCumpleConfig() {
+            const cs = semanaInfo.cumpleSemana;
+            draftCumple = cs && cs.desde ? { desde: cs.desde, lista: JSON.parse(JSON.stringify(semanaInfo.cumpleanos || [])) } : { desde: '', lista: [] };
+            document.getElementById('cfg-cumple-fecha').value = draftCumple.desde || semanaSugerida();
+            pintarRangoCumple(); pintarResultadoCumple();
+        }
+        document.getElementById('cfg-cumple-fecha').addEventListener('change', (e) => {
+            if (!e.target.value) return;
+            const nuevo = lunesDe(e.target.value);
+            if (draftCumple.desde && draftCumple.desde !== nuevo) draftCumple = { desde: '', lista: [] };   // otra semana: hay que volver a revisar
+            e.target.value = nuevo; pintarRangoCumple(); pintarResultadoCumple();
+        });
+        window.revisarCumpleanos = () => {
+            const fecha = document.getElementById('cfg-cumple-fecha').value || semanaSugerida();
+            const desde = lunesDe(fecha);
+            document.getElementById('cfg-cumple-fecha').value = desde;
+            draftCumple = { desde, lista: cumpleanosDeSemana(desde, draftEquipo) };
+            pintarRangoCumple(); pintarResultadoCumple();
+            const sinFecha = draftEquipo.filter(m => m.activo && String(m.nombre || '').trim() && !cumpleValido(m.cumple)).length;
+            const extra = sinFecha ? `\n\nNota: ${sinFecha} miembro(s) activo(s) no tienen fecha de cumpleaños registrada (se agrega en Equipo).` : '';
+            showAlert(draftCumple.lista.length ? '🎂 ¡Hay cumpleaños esta semana!' : 'Sin cumpleaños',
+                (draftCumple.lista.length
+                    ? draftCumple.lista.map(c => `• ${c.nombre}: ${fechaLarga(c.fecha)}`).join('\n') + '\n\nSe mostrará en la ventana de programación cuando toques «Guardar Cambios».'
+                    : 'Nadie del equipo cumple años en esa semana.') + extra);
+        };
 
         // ---- Asignación automática ----
         // Reglas obligatorias: activo, con la habilidad del rol, disponible ese día, una sola vez por día y máximo 2 días por semana.
@@ -3009,6 +3141,12 @@
                         ${DIAS_SERVICIO.map(d => `<label class="flex items-center gap-1.5 text-sm text-slate-700 cursor-pointer"><input type="checkbox" class="m-dia w-4 h-4 accent-sky-600" value="${d.k}" ${diasDe(m).includes(d.k) ? 'checked' : ''}> ${d.l}</label>`).join('')}
                         ${diasDe(m).length === 0 ? '<span class="text-xs font-bold text-amber-600 self-center"><i class="fa-solid fa-triangle-exclamation mr-1"></i>No aparecerá en ningún día</span>' : ''}
                     </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase">🎂 Cumpleaños:</span>
+                        <select class="m-cumple-dia border border-slate-300 bg-white p-1.5 rounded text-sm" aria-label="Día de cumpleaños"><option value="">Día</option>${Array.from({ length: 31 }, (_, i) => i + 1).map(d => `<option value="${d}" ${cumpleDe(m).d === d ? 'selected' : ''}>${d}</option>`).join('')}</select>
+                        <select class="m-cumple-mes border border-slate-300 bg-white p-1.5 rounded text-sm" aria-label="Mes de cumpleaños"><option value="">Mes</option>${MESES.map((n, i) => `<option value="${i + 1}" ${cumpleDe(m).m === i + 1 ? 'selected' : ''}>${n}</option>`).join('')}</select>
+                        ${m.cumple ? '<button type="button" class="m-cumple-quitar text-xs font-bold text-slate-400 hover:text-red-500" title="Quitar cumpleaños"><i class="fa-solid fa-xmark"></i> Quitar</button>' : ''}
+                    </div>
                 </div>`).join('');
 
             cont.querySelectorAll('[data-m]').forEach(card => {
@@ -3023,6 +3161,18 @@
                     m.dias = [...card.querySelectorAll('.m-dia')].filter(x => x.checked).map(x => x.value);
                     renderEquipoUI(); renderScheduleGrid();
                 }));
+                const cDia = card.querySelector('.m-cumple-dia'), cMes = card.querySelector('.m-cumple-mes');
+                const cambioCumple = () => {
+                    const d = +cDia.value, mm = +cMes.value;
+                    if (d && mm && d > DIAS_MES[mm - 1]) { cDia.value = String(DIAS_MES[mm - 1]); }
+                    const dd = +cDia.value;
+                    const antes = !!m.cumple;
+                    m.cumple = dd && mm ? `${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}` : '';
+                    if (antes !== !!m.cumple) renderEquipoUI();
+                };
+                cDia.addEventListener('change', cambioCumple); cMes.addEventListener('change', cambioCumple);
+                const cQuitar = card.querySelector('.m-cumple-quitar');
+                if (cQuitar) cQuitar.addEventListener('click', () => { m.cumple = ''; renderEquipoUI(); });
                 card.querySelector('.m-del').addEventListener('click', () => {
                     if (!confirm('¿Eliminar a ' + (m.nombre || 'este miembro') + ' del equipo? También se quitará de la programación.')) return;
                     draftSel = draftSel.map(row => row.map(v => v === m.id ? '' : v));
@@ -3135,7 +3285,8 @@
             const validRoles = roleNames();
             const miembros = draftEquipo.map(m => ({
                 id: m.id, nombre: m.nombre.trim(), activo: !!m.activo, skills: m.skills.filter(s => validRoles.includes(s)),
-                dias: DIAS_SERVICIO.map(d => d.k).filter(k => diasDe(m).includes(k))
+                dias: DIAS_SERVICIO.map(d => d.k).filter(k => diasDe(m).includes(k)),
+                cumple: cumpleValido(m.cumple) ? m.cumple : ''
             }));
             const nameOf = (id) => (miembros.find(m => m.id === id) || {}).nombre || '';
 
@@ -3148,7 +3299,9 @@
                     personas: draftSel[rIdx].map(v => v.startsWith('legacy:') ? v.slice(7) : (v ? nameOf(v) : '')),
                     ids: draftSel[rIdx].map(v => (v && !v.startsWith('legacy:')) ? v : '')
                 })),
-                notas: []
+                notas: [],
+                cumpleanos: draftCumple.lista.map(c => ({ nombre: c.nombre, fecha: c.fecha })),
+                cumpleSemana: draftCumple.desde ? { desde: draftCumple.desde, hasta: sumarDias(draftCumple.desde, 6) } : null
             };
             document.querySelectorAll('.cfg-note-row').forEach(row => {
                 const texto = row.querySelector('.cfg-note-text').value.trim();
