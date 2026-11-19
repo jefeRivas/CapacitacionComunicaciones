@@ -237,6 +237,9 @@ como [cron-job.org](https://cron-job.org): una tarea cada 5 minutos, método **P
   *"Celebremos este día tan especial: escríbele y deséale un feliz cumpleaños. ¡Que Dios siga derramando
   bendiciones sobre su vida! 🎉"*. Si son varios el mismo día, va un solo aviso con todos los nombres.
 - La fecha se registra en **Configurar → Equipo → Cumpleaños**.
+- **Cumpleaños de la semana (automático):** la ventana de programación muestra sola, antes de la programación,
+  quién cumple años en la semana (lunes a domingo). Los domingos muestra ya la semana que empieza al día siguiente,
+  más quien cumpla ese domingo. No hay que presionar ningún botón; en **Configurar → Programación** se ve una vista previa.
 - Se envía una sola vez por persona y año. Si el disparador llega tarde, se envía igual ese mismo día.
 - **Disparadores:** la tarea diaria de Vercel (`vercel.json`, 16:00 UTC = 11:00 a. m. Colombia; en el plan gratuito
   puede ejecutarse en cualquier momento entre las 11:00 y las 11:59), la revisión al abrir la app y GitHub Actions.

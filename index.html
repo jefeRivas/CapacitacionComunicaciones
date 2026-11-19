@@ -980,7 +980,7 @@
             <div class="p-4 sm:p-8 space-y-6">
                 <section id="weekly-cumple-container" class="hidden rounded-xl p-4 sm:p-5 border border-pink-200 bg-gradient-to-r from-pink-50 via-amber-50 to-orange-50">
                     <h3 class="text-lg sm:text-xl font-extrabold text-pink-700 mb-1">🎂 ¡Cumpleaños esta semana!</h3>
-                    <p class="text-sm text-slate-600 mb-3">Celebremos y felicitemos a nuestros hermanos del equipo:</p>
+                    <p class="text-sm text-slate-600 mb-3"><span id="weekly-cumple-rango"></span> Celebremos y felicitemos a nuestros hermanos del equipo:</p>
                     <ul id="weekly-cumple" class="space-y-2"></ul>
                 </section>
                 <section>
@@ -1146,17 +1146,9 @@
                 <!-- Cumpleaños de la semana -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-pink-200">
                     <div id="cfg-cumple-hoy"></div>
-                    <h3 class="font-bold text-slate-700 mb-1">🎂 Cumpleaños de la semana</h3>
-                    <p class="text-xs text-slate-500 mb-3">Revisa quién del equipo cumple años en la semana (lunes a domingo). Si hay alguno, se mostrará un mensaje en la ventana de programación, antes de la programación. Las fechas de cumpleaños se registran en <strong>Equipo</strong>.</p>
-                    <div class="flex flex-col sm:flex-row sm:items-end gap-2">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Semana</label>
-                            <input type="date" id="cfg-cumple-fecha" class="border border-slate-300 p-2 rounded text-base sm:text-sm focus:ring-1 focus:ring-orange-500 outline-none">
-                        </div>
-                        <p id="cfg-cumple-rango" class="text-sm font-bold text-slate-600 sm:pb-2"></p>
-                        <button type="button" id="cfg-cumple-btn" onclick="revisarCumpleanos()" class="sm:ml-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-bold text-sm"><i class="fa-solid fa-cake-candles"></i> Revisar cumpleaños</button>
-                    </div>
-                    <div id="cfg-cumple-res" class="mt-3"></div>
+                    <h3 class="font-bold text-slate-700 mb-1">🎂 Cumpleaños de la semana <span class="text-xs font-bold text-emerald-700 bg-emerald-50 rounded-full px-2 py-0.5 align-middle">Automático</span></h3>
+                    <p class="text-xs text-slate-500 mb-3">No hay que hacer nada: la ventana de programación muestra sola, antes de la programación, quién del equipo (activos e inactivos) cumple años en la semana, de lunes a domingo. Los <strong>domingos</strong> ya muestra la semana que empieza al día siguiente (y a quien cumpla ese domingo). Las fechas se registran en <strong>Equipo</strong>.</p>
+                    <div id="cfg-cumple-previa"></div>
                 </div>
 
                 <!-- Días y Participantes -->
@@ -1703,7 +1695,7 @@
                     if (dbListo()) dbMostrarEstado('');
                     if (snap.exists()) {
                         const d = snap.data();
-                        if (Array.isArray(d.miembros)) equipoInfo = { miembros: d.miembros };
+                        if (Array.isArray(d.miembros)) { equipoInfo = { miembros: d.miembros }; renderWeekly(); }
                         if (Array.isArray(d.problemas)) { problemasInfo = d.problemas; renderProblemas(); }
                     }
                 }, (error) => { console.error("Error escuchando equipo:", error); dbErrorCode = error && error.code; dbMostrarEstado('No se pudieron cargar los datos guardados. ' + dbDiagnostico(dbErrorCode)); loadLocalData(); renderProblemas(); });
@@ -1741,7 +1733,7 @@
             if (auth && db && dbRaw.semana === undefined) {
                 const msg = `<p class="p-5 text-center text-slate-500">Cargando la programación desde la base de datos…${(dbSlow || dbErrorCode) ? '<br><span class="text-sm text-amber-700 font-semibold">' + dbDiagnostico(dbErrorCode) + '</span>' : ''}</p>`;
                 document.getElementById('weekly-table').innerHTML = msg; document.getElementById('weekly-cards').innerHTML = msg;
-            }
+            } else renderWeekly();
             document.getElementById('weekly-modal').classList.add('open'); document.body.classList.add('overflow-hidden');
         };
         window.closeWeekly = () => { document.getElementById('weekly-modal').classList.remove('open'); document.body.classList.remove('overflow-hidden'); };
@@ -1853,16 +1845,29 @@
         }
 
         // ================= LÓGICA DE INTERFAZ SEMANAL =================
-        // Cumpleaños guardados con la programación que aún deben mostrarse (hasta el domingo de esa semana)
-        function cumpleanosVigentes() {
-            const cs = semanaInfo.cumpleSemana, lista = semanaInfo.cumpleanos || [];
-            if (!cs || !cs.hasta || !lista.length || hoyColombia() > cs.hasta) return [];
-            return [...lista].sort((a, b) => a.fecha.localeCompare(b.fecha));
+        // Cumpleaños que se muestran en la ventana de programación, calculados automáticamente con las fechas del equipo:
+        // de lunes a sábado, la semana actual (lunes a domingo); el domingo, la semana que empieza al día siguiente
+        // más quien cumpla ese mismo domingo.
+        function semanaCumpleVisible() {
+            const hoy = hoyColombia();
+            const domingo = new Date(aUTC(hoy)).getUTCDay() === 0;
+            return { hoy, desde: domingo ? sumarDias(hoy, 1) : lunesDe(hoy), domingo };
+        }
+        function cumpleanosAMostrar(miembros) {
+            const { hoy, desde, domingo } = semanaCumpleVisible();
+            const lista = cumpleanosDeSemana(desde, miembros || []);
+            return domingo ? [...cumpleanosDeSemana(hoy, miembros || [], 1), ...lista] : lista;
+        }
+        function cumpleanosVigentes() { return cumpleanosAMostrar(equipoInfo.miembros); }
+        function textoSemanaCumple() {
+            const { desde } = semanaCumpleVisible();
+            return `Semana del lunes ${fechaLarga(desde, { day: 'numeric', month: 'long' })} al domingo ${fechaLarga(sumarDias(desde, 6), { day: 'numeric', month: 'long' })}.`;
         }
         function renderWeekly() {
             document.getElementById('weekly-title').innerText = semanaInfo.titulo;
             const cumples = cumpleanosVigentes(), hoy = hoyColombia();
             document.getElementById('weekly-cumple-container').classList.toggle('hidden', !cumples.length);
+            document.getElementById('weekly-cumple-rango').textContent = textoSemanaCumple();
             document.getElementById('weekly-cumple').innerHTML = cumples.map(c => `<li class="flex items-center gap-3 bg-white/80 rounded-lg px-3 py-2">
                 <span class="text-2xl">🎉</span>
                 <span class="text-slate-700"><strong class="text-slate-900">${esc(c.nombre)}</strong> cumple años el <strong class="text-pink-700">${esc(fechaLarga(c.fecha))}</strong>${c.fecha === hoy ? ' <span class="ml-1 text-[11px] font-extrabold uppercase bg-pink-600 text-white rounded-full px-2 py-0.5 align-middle">¡Hoy!</span>' : ''}</span></li>`).join('');
@@ -2905,53 +2910,26 @@
             }
             return out;
         }
-        // Semana sugerida: la que corresponde a los días escritos en la programación (por ejemplo "Martes 11");
-        // si no se puede deducir, la semana actual.
-        function semanaSugerida() {
-            const hoy = hoyColombia(), nombres = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-            for (let i = 0; i < 3; i++) {
-                const t = sinTildes((document.getElementById(`cfg-dia-${i}`) || {}).value || '');
-                const dow = nombres.findIndex(n => t.includes(n)), num = +((t.match(/\b(\d{1,2})\b/) || [])[1] || 0);
-                if (dow < 0 || !num) continue;
-                let mejor = null;
-                for (let k = -14; k <= 28; k++) {
-                    const f = sumarDias(hoy, k);
-                    if (new Date(aUTC(f)).getUTCDay() === dow && +f.slice(8) === num && (mejor === null || Math.abs(k) < Math.abs(mejor.k))) mejor = { f, k };
-                }
-                if (mejor) return lunesDe(mejor.f);
-            }
-            return lunesDe(hoy);
+        // Vista previa en Configurar (con los cambios de Equipo aún sin guardar)
+        function pintarPreviaCumple() {
+            const box = document.getElementById('cfg-cumple-previa'); if (!box) return;
+            const lista = cumpleanosAMostrar(draftEquipo), hoy = hoyColombia();
+            const sinFecha = draftEquipo.filter(m => String(m.nombre || '').trim() && !cumpleValido(m.cumple)).length;
+            box.innerHTML = `<p class="text-xs font-bold text-slate-600 mb-1">${esc(textoSemanaCumple())}</p>`
+                + (lista.length
+                    ? '<p class="text-xs font-bold text-pink-700 uppercase mb-1">Se muestra al equipo:</p><ul class="space-y-1">' + lista.map(c =>
+                        `<li class="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-lg px-3 py-2 text-sm"><span>🎉</span><span class="flex-1"><strong>${esc(c.nombre)}</strong> — ${esc(fechaLarga(c.fecha))}${c.fecha === hoy ? ' <span class="text-[11px] font-extrabold uppercase bg-pink-600 text-white rounded-full px-2 py-0.5">¡Hoy!</span>' : ''}</span></li>`).join('') + '</ul>'
+                    : '<p class="text-sm text-slate-500"><i class="fa-regular fa-calendar-xmark mr-1"></i>Nadie del equipo cumple años en esta semana.</p>')
+                + (sinFecha ? `<p class="text-xs text-amber-700 mt-2"><i class="fa-solid fa-circle-info mr-1"></i>${sinFecha} miembro(s) sin fecha de cumpleaños registrada (se agrega en Equipo).</p>` : '');
         }
-        let draftCumple = { desde: '', lista: [] };
-        function pintarRangoCumple() {
-            const desde = draftCumple.desde || lunesDe(document.getElementById('cfg-cumple-fecha').value || hoyColombia());
-            document.getElementById('cfg-cumple-rango').textContent = `Lunes ${fechaLarga(desde, { day: 'numeric', month: 'short' })} – domingo ${fechaLarga(sumarDias(desde, 6), { day: 'numeric', month: 'short' })}`;
-        }
-        function pintarResultadoCumple() {
-            const box = document.getElementById('cfg-cumple-res');
-            if (!draftCumple.desde) { box.innerHTML = ''; return; }
-            if (!draftCumple.lista.length) { box.innerHTML = '<p class="text-sm text-slate-500"><i class="fa-regular fa-calendar-xmark mr-1"></i>No hay cumpleaños en esa semana. No se mostrará ningún mensaje.</p>'; return; }
-            box.innerHTML = '<p class="text-xs font-bold text-pink-700 uppercase mb-1">Se mostrará al equipo:</p><ul class="space-y-1">' + draftCumple.lista.map((c, i) =>
-                `<li class="flex items-center gap-2 bg-pink-50 border border-pink-100 rounded-lg px-3 py-2 text-sm"><span>🎉</span><span class="flex-1"><strong>${esc(c.nombre)}</strong> — ${esc(fechaLarga(c.fecha))}</span><button type="button" data-quitar-cumple="${i}" class="text-slate-400 hover:text-red-500" title="No mostrar"><i class="fa-solid fa-xmark"></i></button></li>`).join('') + '</ul>';
-            box.querySelectorAll('[data-quitar-cumple]').forEach(b => b.addEventListener('click', () => { draftCumple.lista.splice(+b.dataset.quitarCumple, 1); pintarResultadoCumple(); }));
-        }
-        function cargarCumpleConfig() {
-            const cs = semanaInfo.cumpleSemana;
-            draftCumple = cs && cs.desde ? { desde: cs.desde, lista: JSON.parse(JSON.stringify(semanaInfo.cumpleanos || [])) } : { desde: '', lista: [] };
-            document.getElementById('cfg-cumple-fecha').value = draftCumple.desde || semanaSugerida();
-            pintarRangoCumple(); pintarResultadoCumple(); pintarCumpleHoy();
-        }
-        document.getElementById('cfg-cumple-fecha').addEventListener('change', (e) => {
-            if (!e.target.value) return;
-            const nuevo = lunesDe(e.target.value);
-            if (draftCumple.desde && draftCumple.desde !== nuevo) draftCumple = { desde: '', lista: [] };   // otra semana: hay que volver a revisar
-            e.target.value = nuevo; pintarRangoCumple(); pintarResultadoCumple();
-        });
+        function cargarCumpleConfig() { pintarCumpleHoy(); }
+
         // ---- Felicitación de cumpleaños de HOY (automática a las 11:00 a. m.; también manual con el botón) ----
         const cumpleanerosHoy = () => cumpleanosDeSemana(hoyColombia(), draftEquipo, 1);
         function pintarCumpleHoy() {
             const box = document.getElementById('cfg-cumple-hoy'); if (!box) return;
             const hoy = cumpleanerosHoy();
+            pintarPreviaCumple();
             if (!hoy.length) { box.innerHTML = ''; return; }
             const nombres = joinEs(hoy.map(c => c.nombre));
             box.innerHTML = `<div class="mb-4 rounded-xl bg-gradient-to-r from-pink-600 to-orange-500 text-white p-3 flex flex-col sm:flex-row sm:items-center gap-2">
@@ -2980,20 +2958,6 @@
             } catch (e) { showAlert('No se pudo enviar', 'Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.', true); }
             finally { btn.disabled = false; btn.innerHTML = orig; }
         }
-
-        window.revisarCumpleanos = () => {
-            const fecha = document.getElementById('cfg-cumple-fecha').value || semanaSugerida();
-            const desde = lunesDe(fecha);
-            document.getElementById('cfg-cumple-fecha').value = desde;
-            draftCumple = { desde, lista: cumpleanosDeSemana(desde, draftEquipo) };
-            pintarRangoCumple(); pintarResultadoCumple();
-            const sinFecha = draftEquipo.filter(m => String(m.nombre || '').trim() && !cumpleValido(m.cumple)).length;
-            const extra = sinFecha ? `\n\nNota: ${sinFecha} miembro(s) no tienen fecha de cumpleaños registrada (se agrega en Equipo).` : '';
-            showAlert(draftCumple.lista.length ? '🎂 ¡Hay cumpleaños esta semana!' : 'Sin cumpleaños',
-                (draftCumple.lista.length
-                    ? draftCumple.lista.map(c => `• ${c.nombre}: ${fechaLarga(c.fecha)}`).join('\n') + '\n\nSe mostrará en la ventana de programación cuando toques «Guardar Cambios».'
-                    : 'Nadie del equipo cumple años en esa semana.') + extra);
-        };
 
         // ---- Asignación automática ----
         // Reglas obligatorias: activo, con la habilidad del rol, disponible ese día, una sola vez por día y máximo 2 días por semana.
@@ -3341,9 +3305,7 @@
                     personas: draftSel[rIdx].map(v => v.startsWith('legacy:') ? v.slice(7) : (v ? nameOf(v) : '')),
                     ids: draftSel[rIdx].map(v => (v && !v.startsWith('legacy:')) ? v : '')
                 })),
-                notas: [],
-                cumpleanos: draftCumple.lista.map(c => ({ nombre: c.nombre, fecha: c.fecha })),   // nombre y día de cada cumpleañero
-                cumpleSemana: draftCumple.desde ? { desde: draftCumple.desde, hasta: sumarDias(draftCumple.desde, 6) } : null
+                notas: []
             };
             document.querySelectorAll('.cfg-note-row').forEach(row => {
                 const texto = row.querySelector('.cfg-note-text').value.trim();
