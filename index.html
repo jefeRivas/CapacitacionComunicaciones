@@ -3351,6 +3351,11 @@
             const cambioProblemas = stable(problemas) !== (adminBaseline && adminBaseline.problemas);
             if (usaDb) {
                 if (!currentUser || !adminBaseline) { showAlert('Sesión requerida', 'Inicia sesión como administrador y abre Configurar de nuevo para guardar.', true); return; }
+                if (await hayVersionNueva()) {
+                    showAlert('Hay una versión nueva de la app', 'Para no borrar datos con una copia desactualizada, la app se va a recargar ahora. Tus cambios de esta ventana NO se guardaron: vuelve a abrir Configurar y haz los cambios de nuevo.', true);
+                    setTimeout(() => location.reload(), 4000);
+                    return;
+                }
                 try {
                     const refS = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'semana');
                     const refE = doc(db, 'artifacts', appId, 'public', 'data', 'config', 'equipo');
@@ -3359,7 +3364,9 @@
                         const curS = sS.exists() ? sS.data() : null, curE = sE.exists() ? sE.data() : null;
                         // Si lo guardado en la nube ya no coincide con lo que se cargó al abrir esta ventana, no se escribe nada
                         if (stable(curS) !== adminBaseline.semana || stable(curE) !== adminBaseline.equipo) { const err = new Error('conflicto'); err.conflicto = true; throw err; }
-                        const dataE = { miembros };
+                        // Se conservan los datos de cada miembro que esta versión de la app no maneje (por ejemplo, campos nuevos)
+                        const actuales = new Map(((curE && curE.miembros) || []).map(x => [x.id, x]));
+                        const dataE = { miembros: miembros.map(m => ({ ...(actuales.get(m.id) || {}), ...m })) };
                         if (cambioProblemas) dataE.problemas = problemas;   // la lista de problemas solo se toca si la editaste
                         tx.set(refS, nuevaSemana, { merge: true });
                         tx.set(refE, dataE, { merge: true });
@@ -4382,6 +4389,28 @@
             fetch('/api/recordatorios', { method: 'POST', keepalive: true }).catch(() => {});
         }
         document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisarRecordatorios(); });
+
+        // ================= VERSIÓN DE LA APP =================
+        // Evita que una copia vieja de la app (abierta desde antes de una actualización) guarde y borre datos nuevos.
+        let versionCargada = null;
+        async function versionPublicada() {
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost') return '';
+            try { const r = await fetch('/api/version', { cache: 'no-store' }); if (!r.ok) return ''; return String(((await r.json()) || {}).version || ''); }
+            catch (e) { return ''; }
+        }
+        async function hayVersionNueva() {
+            if (!versionCargada) return false;             // sin referencia (o sin conexión): no se bloquea nada
+            const v = await versionPublicada();
+            return !!v && v !== versionCargada;
+        }
+        versionPublicada().then(v => { versionCargada = v; });
+        // Al volver a la app después de tenerla en segundo plano: si hay versión nueva y no se está editando nada, se recarga sola
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState !== 'visible') return;
+            if (!(await hayVersionNueva())) return;
+            const editando = [...document.querySelectorAll('.modal-overlay.open')].some(m => m.id !== 'weekly-modal' && m.id !== 'more-sheet');
+            if (!editando) location.reload();
+        });
 
         async function iniciarNotificaciones() {
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
